@@ -1,0 +1,2898 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RotiYa — Pedí en tu rotisería</title>
+
+<!-- PWA: hace que la app se pueda "instalar" desde el navegador -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#141210">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RotiYa">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Karla:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Firebase (compat, para poder usarlo con un solo archivo sin build) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<style>
+  :root{
+    --bg: #FCF9F1;
+    --ink: #2B241E;
+    --ink-soft: #6B6055;
+    --line: #E7DFCF;
+    --surface: #FFFFFF;
+    --primary: #A3311F;
+    --primary-dark: #7C2417;
+    --secondary: #59684A;
+    --gold: #C98A1F;
+    --transit: #3F7D87;
+    --exito: #8FBF6E;
+    --alerta-texto: #D9705C;
+    --admin-bg: #211D19;
+    --admin-surface: #2C2620;
+    --admin-line: #45392E;
+    --radius-s: 3px;
+    --radius-m: 6px;
+    --font-display: "Fraunces", serif;
+    --font-body: "Karla", sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  #app{ min-height:100vh; }
+  button{ font-family: var(--font-body); cursor:pointer; }
+  input, select, textarea{ font-family: var(--font-body); }
+  a{ color: inherit; }
+
+  /* ---------- layout general vista cliente ---------- */
+  .contenedor{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    padding-bottom: 90px;
+  }
+  .encabezado{
+    padding: 34px 20px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .encabezado h1{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 34px;
+    margin: 0 0 4px;
+    color: var(--primary-dark);
+  }
+  .encabezado p{
+    margin:0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .fila-tagline{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .link-seguimiento{
+    font-size: 13px;
+    font-weight:700;
+    color: var(--primary);
+    text-decoration: underline;
+    white-space: nowrap;
+    display:inline-block;
+    padding: 10px 18px;
+    border-radius: var(--radius-m);
+    background: var(--surface);
+    border: 1px solid var(--primary);
+    box-shadow: 0 2px 0 rgba(43,36,30,0.12), 0 0 0 rgba(163,49,31,0.55);
+    animation: brillo-seguimiento 1.8s ease-in-out infinite;
+  }
+  @keyframes brillo-seguimiento{
+    0%, 100% { box-shadow: 0 2px 0 rgba(43,36,30,0.12), 0 0 0 rgba(163,49,31,0.55); }
+    50% { box-shadow: 0 2px 0 rgba(43,36,30,0.12), 0 0 12px 3px rgba(163,49,31,0.55); }
+  }
+
+  .aviso-horario{
+    margin: 4px 20px 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-m);
+    font-weight:700;
+    font-size:14px;
+    text-align:center;
+  }
+  .aviso-horario.cerrado{ background: #F6E2DD; color: var(--primary-dark); }
+  .aviso-horario.cierra-pronto{ background: #FBEBC9; color: #8A5A0E; }
+
+  .categorias{
+    display:flex;
+    gap:8px;
+    padding: 14px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .categorias::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex: 0 0 auto;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .chip.activo{
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .grupo-categoria{ padding: 4px 20px 0; }
+  .grupo-categoria h2{
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--secondary);
+    margin: 22px 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--secondary);
+    display:inline-block;
+  }
+  .item-comida{
+    display:flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .item-comida.agotado{ opacity: .5; }
+  .foto-comida{
+    width: 64px; height: 64px;
+    object-fit: cover;
+    border-radius: var(--radius-s);
+    flex: 0 0 auto;
+  }
+
+  /* ---------- portada (elegir rotisería + promos) ---------- */
+  .portada{ max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg); padding-bottom:40px; }
+  .franja-marca{ background:#141210; padding:16px 0; display:flex; justify-content:center; align-items:center; position:sticky; top:0; z-index:20; }
+  .franja-marca img{ height:88px; width:auto; display:block; }
+  .buscador-global{ position:relative; margin: 16px 20px 4px; }
+  .buscador-global input{
+    width:100%; padding:13px 16px 13px 42px; border-radius:24px; border:1px solid var(--line);
+    background:var(--surface); font-size:14px; font-family:var(--font-body); color:var(--ink);
+  }
+  .buscador-global input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  .buscador-global::before{
+    content:"🔍"; position:absolute; left:15px; top:50%; transform:translateY(-50%); font-size:14px; opacity:0.55;
+  }
+  .resultados-busqueda{ margin: 4px 20px 8px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-m); overflow:hidden; }
+  .resultado-item{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .resultado-item:last-child{ border-bottom:none; }
+  .resultado-item img{ width:40px; height:40px; border-radius:8px; object-fit:cover; background:var(--bg); flex:0 0 auto; }
+  .resultado-item .info{ flex:1; min-width:0; }
+  .resultado-item .info .nom{ font-size:13px; font-weight:700; color:var(--ink); }
+  .resultado-item .info .neg{ font-size:11px; color:var(--ink-soft); }
+  .resultado-item .precio{ font-size:12px; font-weight:700; color:var(--gold); flex:0 0 auto; }
+  .sin-resultados{ margin:4px 20px 8px; font-size:13px; color:var(--ink-soft); text-align:center; padding:14px 0; }
+
+  .banner-hero{
+    margin: 18px 20px 0; border-radius: var(--radius-m); overflow:hidden; position:relative;
+    background: linear-gradient(120deg, #241a14, #3b241a); color:#fff; padding: 22px 20px; min-height:110px;
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .banner-hero .linea1{ font-family:var(--font-display); font-style:italic; font-size:19px; font-weight:600; margin:0; }
+  .banner-hero .linea2{ font-family:var(--font-display); font-style:italic; font-size:19px; font-weight:700; color:var(--gold); margin:2px 0 8px; text-decoration:underline; text-decoration-color:var(--primary); }
+  .banner-hero .linea3{ font-size:11px; letter-spacing:1.5px; opacity:0.85; }
+
+  .fila-rotiserias-wrap{ display:flex; align-items:center; gap:6px; margin:20px 8px 4px; }
+  .flecha-carrusel{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%; border:1px solid var(--line); background:var(--surface);
+    display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--ink-soft); cursor:pointer;
+  }
+  .fila-rotiserias{ display:flex; gap:16px; overflow-x:auto; padding:2px 4px 6px; scroll-snap-type:x proximity; flex:1; min-width:0; }
+  .fila-rotiserias::-webkit-scrollbar{ display:none; }
+  .rotiseria-avatar{ display:flex; flex-direction:column; align-items:center; gap:6px; flex:0 0 auto; width:64px; background:none; border:none; padding:0; scroll-snap-align:start; }
+  .rotiseria-avatar img, .rotiseria-avatar .sin-logo{ width:58px; height:58px; border-radius:16px; object-fit:cover; border:1px solid var(--line); background:var(--surface); }
+  .rotiseria-avatar .sin-logo{ display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:600; color:var(--primary-dark); font-size:18px; }
+  .rotiseria-avatar span{ font-size:11px; color:var(--ink-soft); text-align:center; line-height:1.25; }
+  .rotiseria-avatar.rotiseria-cerrada img, .rotiseria-avatar.rotiseria-cerrada .sin-logo{ opacity:0.4; filter:grayscale(60%); }
+  .rotiseria-avatar.rotiseria-cerrada span{ opacity:0.6; }
+  .etiqueta-cerrada{ font-size:9px; font-weight:700; color:var(--primary-dark); background:#F6E2DD; padding:2px 8px; border-radius:20px; margin-top:-2px; }
+  .dots-rotiserias{ display:flex; justify-content:center; gap:6px; margin-bottom:22px; }
+  .dots-rotiserias .dot{ width:6px; height:6px; border-radius:50%; background:var(--line); }
+  .dots-rotiserias .dot.activo{ background:var(--primary); width:16px; border-radius:4px; }
+
+  .banda-ofertas{
+    margin: 4px 0 14px; padding: 14px 20px; background: linear-gradient(100deg, #141210, #3a0f0a);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .banda-ofertas h2{ font-family:var(--font-display); font-style:italic; font-size:22px; font-weight:700; margin:0; color:#fff; letter-spacing:0.3px; }
+  .banda-ofertas h2 b{ color:var(--gold); }
+  .grilla-promos{ display:grid; grid-template-columns:1fr 1fr; gap:22px; padding:6px 20px 4px; }
+  .tarjeta-promo{ border-radius:16px; overflow:visible; position:relative; cursor:pointer; }
+  .tarjeta-promo .promo-foto{
+    width:100%; aspect-ratio:0.95; object-fit:cover; background:var(--surface); display:block; border-radius:16px;
+    box-shadow: 0 10px 18px -6px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .tarjeta-promo:nth-child(odd) .promo-foto{ transform:rotate(-3deg); }
+  .tarjeta-promo:nth-child(even) .promo-foto{ transform:rotate(3deg); }
+  .tarjeta-promo .promo-nombre{
+    position:absolute; left:8px; bottom:12px; max-width:72%;
+    background:#fff; padding:6px 12px 6px 10px; border-radius:0 14px 14px 0;
+    font-family:var(--font-display); font-weight:700; font-size:12px; color:var(--ink); line-height:1.2;
+    box-shadow:0 2px 6px rgba(0,0,0,0.18);
+  }
+  .tarjeta-promo .precio{
+    position:absolute; right:-6px; bottom:-10px; color:#fff; background:var(--primary); font-weight:800; font-size:13px;
+    padding:15px 11px 11px; transform:rotate(-10deg); text-align:center;
+    clip-path: polygon(50% 0%, 61% 9%, 75% 2%, 79% 17%, 95% 18%, 89% 34%, 100% 48%, 89% 63%, 95% 78%, 79% 80%, 75% 96%, 61% 88%, 50% 100%, 39% 88%, 25% 96%, 21% 80%, 5% 78%, 11% 63%, 0% 48%, 11% 34%, 5% 18%, 21% 17%, 25% 2%, 39% 9%);
+  }
+
+  /* ---------- login / registro ---------- */
+  .tabs-login{ display:flex; gap:6px; margin-bottom:16px; }
+  .tabs-login button{ flex:1; padding:8px; border-radius:var(--radius-s); border:1px solid var(--line); background:var(--surface); font-size:13px; font-weight:600; color:var(--ink-soft); }
+  .tabs-login button.activo{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .link-chico{ display:block; text-align:center; font-size:12px; color:var(--primary); text-decoration:underline; margin-top:14px; background:none; border:none; width:100%; }
+  .mensaje-recuperar{ font-size:13px; color:var(--secondary); text-align:center; margin-top:10px; }
+
+  /* ---------- ticket de pedido (imprimible) ---------- */
+  .ticket{
+    background:#fff; color:#111; font-family:"Karla", Arial, sans-serif;
+    max-width:320px; margin:0 auto; padding:16px 6px; font-size:12.5px; line-height:1.45;
+  }
+  .ticket-header{ display:flex; align-items:center; gap:10px; }
+  .ticket-logo{ width:40px; height:40px; object-fit:cover; border-radius:50%; flex:0 0 auto; }
+  .ticket-nombre-negocio{ font-weight:700; font-size:15px; }
+  .ticket-linea{ border-top:1px dashed #999; margin:10px 0; }
+  .ticket-bloque div{ margin-bottom:2px; }
+  .ticket-fila{ display:grid; grid-template-columns:34px 1fr auto; gap:8px; padding:3px 0; }
+  .ticket-encabezado-items{ font-weight:700; text-transform:uppercase; font-size:10.5px; color:#555; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:2px; }
+  .ticket-total{ grid-template-columns:1fr auto; font-weight:700; font-size:15px; }
+  .ticket-gracias{ text-align:center; font-weight:600; margin-top:4px; }
+  .acciones-factura{ display:flex; gap:10px; margin-top:18px; }
+  .acciones-factura button{ flex:1; }
+  @media print{
+    @page{ size: 8cm 12cm; margin: 0; }
+    body *{ visibility:hidden; }
+    #ticket-imprimible, #ticket-imprimible *{ visibility:visible; }
+    #ticket-imprimible{
+      position:absolute; left:0; top:0;
+      width:8cm; max-width:8cm;
+      box-sizing:border-box;
+      padding:3mm 3mm;
+      font-size:10.5px;
+    }
+    .ticket-nombre-negocio{ font-size:13px; }
+    .ticket-fila{ grid-template-columns:24px 1fr auto; gap:4px; }
+  }
+  .item-comida .info{ flex:1; min-width:0; }
+  .item-comida .info h3{
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0 0 3px;
+  }
+  .item-comida .info p{
+    margin: 0 0 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .item-comida .precio{
+    font-weight: 700;
+    color: var(--gold);
+    font-size: 15px;
+  }
+  .item-comida .agotado-label{
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .control-cantidad{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex: 0 0 auto;
+  }
+  .btn-agregar{
+    background: var(--ink);
+    color:#fff;
+    border:none;
+    width: 34px; height: 34px;
+    border-radius: var(--radius-s);
+    font-size: 18px;
+    line-height:1;
+  }
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:0;
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-s);
+    overflow:hidden;
+  }
+  .stepper button{
+    background: var(--ink);
+    color:#fff;
+    border:none;
+    width: 30px; height: 34px;
+    font-size: 16px;
+  }
+  .stepper span{
+    width: 26px;
+    text-align:center;
+    font-weight:700;
+    font-size: 14px;
+  }
+
+  .barra-carrito{
+    position: fixed;
+    bottom: 0; left:0; right:0;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--ink);
+    color:#fff;
+    padding: 14px 18px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    border-radius: var(--radius-m) var(--radius-m) 0 0;
+  }
+  .barra-carrito .txt{ font-size: 13px; }
+  .barra-carrito .txt b{ display:block; font-family: var(--font-display); font-size: 17px; }
+  .barra-carrito button{
+    background: var(--gold);
+    color: var(--ink);
+    border:none;
+    padding: 10px 18px;
+    border-radius: var(--radius-s);
+    font-weight:700;
+    font-size: 14px;
+  }
+
+  /* ---------- hoja modal (carrito / checkout) ---------- */
+  .fondo-hoja{
+    position: fixed; inset:0;
+    background: rgba(43,36,30,.45);
+    display:flex; align-items:flex-end; justify-content:center;
+    z-index: 40;
+  }
+  .hoja{
+    background: var(--bg);
+    width:100%; max-width: 480px;
+    max-height: 88vh;
+    overflow-y:auto;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 20px 28px;
+  }
+  .hoja-header{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 14px;
+  }
+  .hoja-header h2{
+    font-family: var(--font-display);
+    font-weight:600; font-size:20px; margin:0;
+  }
+  .cerrar{
+    background:none; border:none; font-size: 22px; color: var(--ink-soft); line-height:1;
+  }
+  .hoja-imagen{
+    background: var(--bg);
+    width:100%; max-width:480px;
+    height:60vh;
+    border-radius:16px 16px 0 0;
+    padding:16px;
+    display:flex; flex-direction:column;
+  }
+  .hoja-imagen img{
+    flex:1;
+    width:100%;
+    min-height:0;
+    object-fit:contain;
+    border-radius:10px;
+    background:#111;
+  }
+  .fila-carrito{
+    display:flex; justify-content:space-between; align-items:center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .fila-carrito .nom{ font-weight:600; font-size:14px; }
+  .fila-carrito .sub{ font-size:12px; color:var(--ink-soft); }
+  .fila-carrito .quitar{ background:none; border:none; color:var(--primary); font-size:13px; font-weight:700; }
+
+  .totalizador{
+    display:flex; justify-content:space-between;
+    padding: 14px 0 4px;
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 600;
+  }
+  .btn-primario{
+    width:100%;
+    background: var(--primary);
+    color:#fff;
+    border:none;
+    padding: 14px;
+    border-radius: var(--radius-s);
+    font-weight:700;
+    font-size: 15px;
+    margin-top: 12px;
+  }
+  .btn-primario:disabled{ background: var(--line); color: var(--ink-soft); }
+
+  .campo{ margin-bottom: 14px; }
+  .campo label{ display:block; font-size:12px; font-weight:700; color: var(--ink-soft); margin-bottom:5px; }
+  .campo input, .campo textarea, .campo select{
+    width:100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-s);
+    font-size: 14px;
+    background: var(--surface);
+  }
+  .campo textarea{ resize: vertical; min-height: 60px; }
+  .opciones-pago{ display:flex; gap:8px; }
+  .opciones-pago label{
+    flex:1;
+    border:1px solid var(--line);
+    border-radius: var(--radius-s);
+    padding: 11px 10px;
+    text-align:center;
+    font-size:13px; font-weight:600;
+    background: var(--surface);
+  }
+  .opciones-pago input{ display:none; }
+  .opciones-pago input:checked + span{ color: var(--primary); }
+  .opciones-pago label:has(input:checked){ border-color: var(--primary); background:#FCEFEA; }
+  .direccion-local{
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-s);
+    background: var(--surface);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .datos-transferencia{
+    background: #FCEFEA;
+    border-radius: var(--radius-s);
+    padding: 12px;
+    font-size: 13px;
+    margin-top: 4px;
+    line-height:1.6;
+  }
+
+  /* ---------- seguimiento del pedido ---------- */
+  .pantalla-seguimiento{ padding: 50px 24px 20px; }
+  .numero-seguimiento{
+    font-family: var(--font-display);
+    font-size: 22px; font-weight:600;
+    color: var(--primary-dark);
+    margin: 0 0 14px;
+  }
+  .codigo-seguimiento{
+    display:flex; align-items:center; gap:12px;
+    background: var(--surface);
+    border: 1px dashed var(--primary);
+    border-radius: var(--radius-m);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  .codigo-texto{
+    font-family: var(--font-display);
+    font-size: 24px; font-weight:700;
+    letter-spacing: 2px;
+    color: var(--ink);
+  }
+  .btn-copiar{
+    margin-left:auto;
+    background: var(--ink);
+    color:#fff;
+    border:none;
+    padding: 8px 14px;
+    border-radius: var(--radius-s);
+    font-size: 13px; font-weight:700;
+    white-space: nowrap;
+  }
+  .ayuda-codigo{ font-size:12px; color: var(--ink-soft); margin: 0 0 22px; }
+  .mensaje-del-local{
+    background: #FCEFEA;
+    border-radius: var(--radius-s);
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height:1.5;
+    text-align:left;
+    margin-bottom: 20px;
+  }
+  .error-texto{ color: var(--primary); font-size:13px; margin: -6px 0 12px; }
+  .pasos-seguimiento{ margin-bottom: 22px; }
+  .paso-seguimiento{
+    display:flex; align-items:center; gap:12px;
+    padding: 9px 0;
+    opacity:.4;
+  }
+  .paso-seguimiento.hecho{ opacity:1; }
+  .paso-seguimiento.actual{ opacity:1; }
+  .paso-seguimiento.actual .texto-paso{ font-weight:700; }
+  .punto-paso{
+    width:26px; height:26px; border-radius:50%;
+    background: var(--line);
+    color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    flex: 0 0 auto;
+  }
+  .paso-seguimiento.hecho .punto-paso{ background: var(--secondary); color:#fff; }
+  .paso-seguimiento.actual .punto-paso{ background: var(--primary); color:#fff; }
+  .texto-paso{ font-size:14px; }
+  .aviso-en-camino{
+    background: var(--transit);
+    color:#fff;
+    padding: 13px 14px;
+    border-radius: var(--radius-s);
+    font-weight:700;
+    text-align:center;
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+  .resumen-seguimiento{
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    padding: 14px 0;
+    margin-bottom: 22px;
+    font-size:14px;
+  }
+  .resumen-seguimiento .fila-item{
+    display:flex; justify-content:space-between;
+    padding: 3px 0;
+    color: var(--ink-soft);
+  }
+  .total-seguimiento{
+    display:flex; justify-content:space-between;
+    font-weight:700;
+    margin-top:8px;
+    font-family: var(--font-display);
+    font-size:17px;
+  }
+
+  .acceso-admin{
+    text-align:center;
+    padding: 18px 0 30px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .acceso-admin a{ text-decoration: underline; }
+
+  /* ---------- vista admin ---------- */
+  .admin{
+    min-height: 100vh;
+    background: var(--admin-bg);
+    color: #F2ECE2;
+  }
+  .admin-login{
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px;
+  }
+  .tarjeta-login{
+    background: var(--admin-surface);
+    padding: 32px 26px;
+    border-radius: var(--radius-m);
+    width:100%; max-width: 340px;
+    border: 1px solid var(--admin-line);
+  }
+  .tarjeta-login h2{
+    font-family: var(--font-display);
+    font-weight:600;
+    margin:0 0 20px;
+    color: var(--gold);
+  }
+  .tarjeta-login .campo label{ color:#B8AD9E; }
+  .tarjeta-login .campo input{
+    background: var(--admin-bg);
+    border-color: var(--admin-line);
+    color:#F2ECE2;
+  }
+  .error-login{ color:#E08A75; font-size:13px; margin-top:-6px; margin-bottom:12px; }
+
+  .admin-header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 20px;
+    border-bottom: 1px solid var(--admin-line);
+  }
+  .admin-header h1{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 22px; margin:0;
+    color: var(--gold);
+  }
+  .btn-salir{ background:none; border:none; color:#B8AD9E; font-size:13px; text-decoration:underline; }
+
+  .admin-tabs{
+    display:flex; gap: 22px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--admin-line);
+  }
+  .admin-tabs button{
+    background:none; border:none;
+    color:#B8AD9E;
+    padding: 14px 0;
+    font-size: 14px; font-weight:600;
+    border-bottom: 2px solid transparent;
+    position:relative;
+  }
+  .admin-tabs button.activo{ color:#fff; border-bottom-color: var(--gold); }
+  .insignia{
+    background: var(--primary);
+    color:#fff;
+    font-size: 10px;
+    border-radius: 999px;
+    padding: 1px 6px;
+    margin-left: 6px;
+  }
+
+  .admin-contenido{ padding: 20px; max-width: 640px; margin: 0 auto; }
+
+  .btn-secundario-admin{
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 9px 14px;
+    border-radius: var(--radius-s);
+    font-size: 13px; font-weight:700;
+  }
+  .btn-oro{
+    background: var(--gold);
+    border:none;
+    color: var(--admin-bg);
+    padding: 11px 16px;
+    border-radius: var(--radius-s);
+    font-weight:700;
+    font-size: 14px;
+  }
+
+  .form-comida{
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--radius-m);
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .form-comida .campo label{ color:#B8AD9E; }
+  .form-comida .campo input, .form-comida .campo textarea, .form-comida .campo select{
+    background: var(--admin-bg);
+    border-color: var(--admin-line);
+    color: #F2ECE2;
+  }
+  .fila-form{ display:flex; gap:10px; }
+  .fila-form .campo{ flex:1; }
+  .disponible-switch{ display:flex; align-items:center; gap:8px; font-size:13px; color:#B8AD9E; margin-bottom:14px; }
+
+  .fila-comida-admin{
+    display:flex; justify-content:space-between; align-items:center;
+    gap: 10px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--admin-line);
+  }
+  .fila-comida-admin.agotado{ opacity:.45; }
+  .fila-comida-admin .nom{ font-weight:700; font-size:15px; }
+  .fila-comida-admin .cat{ font-size:12px; color:#B8AD9E; }
+  .fila-comida-admin .precio{ color: var(--gold); font-weight:700; font-size:14px; }
+  .acciones-comida{ display:flex; gap:8px; flex:0 0 auto; }
+  .acciones-comida button{
+    background: none; border: 1px solid var(--admin-line);
+    color: #F2ECE2; width:30px; height:30px; border-radius: var(--radius-s);
+    font-size: 14px;
+  }
+
+  .filtros-pedidos{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 14px; }
+  .filtros-pedidos button{
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    color: #B8AD9E;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px; font-weight:700;
+  }
+  .filtros-pedidos button.activo{ background: var(--gold); border-color:var(--gold); color: var(--admin-bg); }
+
+  .tarjeta-pedido{
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius-m);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .tarjeta-pedido.estado-nuevo{ border-left-color: var(--primary); }
+  .tarjeta-pedido.estado-preparando{ border-left-color: var(--gold); }
+  .tarjeta-pedido.estado-listo{ border-left-color: var(--secondary); }
+  .tarjeta-pedido.estado-en_camino{ border-left-color: var(--transit); }
+  .tarjeta-pedido.estado-entregado{ border-left-color: var(--admin-line); opacity:.55; }
+  .cabecera-pedido{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .cabecera-pedido .num{ font-family: var(--font-display); font-size:18px; font-weight:700; }
+  .cabecera-pedido .hora{ font-size:11px; color:#B8AD9E; }
+  .codigo-admin{ font-family: var(--font-body); font-size:12px; font-weight:700; color: var(--gold); letter-spacing:1px; }
+  .comprobante-pedido{ margin: 4px 0 10px; }
+  .etiqueta-comprobante{ display:block; font-size:11px; font-weight:700; color:#B8AD9E; margin-bottom:4px; }
+  .comprobante-pedido img{ max-width: 220px; width:100%; border-radius:6px; border:1px solid var(--admin-line); }
+  .mensaje-admin{ margin: 4px 0 10px; }
+  .etiqueta-mensaje{ display:block; font-size:11px; font-weight:700; color:#B8AD9E; margin-bottom:4px; }
+  .fila-mensaje-admin{ display:flex; gap:8px; flex-wrap:wrap; }
+  .fila-mensaje-admin input{
+    flex:1;
+    min-width: 140px;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-line);
+    color: #F2ECE2;
+    padding: 9px 10px;
+    border-radius: var(--radius-s);
+    font-size: 13px;
+  }
+  .btn-whatsapp{
+    background: #25D366;
+    color: #0B3D24;
+    border: none;
+    padding: 9px 14px;
+    border-radius: var(--radius-s);
+    font-weight:700;
+    font-size: 13px;
+  }
+  .detalle-pedido{ font-size: 13px; color:#D9CFC0; line-height:1.6; margin-bottom:10px; }
+  .detalle-pedido b{ color:#fff; }
+  .items-pedido{ font-size:13px; margin: 6px 0 10px; }
+  .items-pedido div{ display:flex; justify-content:space-between; padding: 2px 0; }
+  .pie-pedido{ display:flex; justify-content:space-between; align-items:center; }
+  .total-pedido{ font-weight:700; color: var(--gold); }
+  .selector-estado select{
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-line);
+    color:#F2ECE2;
+    padding: 7px 10px;
+    border-radius: var(--radius-s);
+    font-size: 12px; font-weight:700;
+  }
+
+  .vacio{ text-align:center; color: var(--ink-soft); padding: 40px 20px; font-size:14px; }
+  .admin .vacio{ color:#B8AD9E; }
+
+  /* ---------- módulo de caja ---------- */
+  .filtro-fechas{ display:flex; gap:10px; align-items:flex-end; margin-bottom:6px; flex-wrap:wrap; }
+  .filtro-fechas .campo{ flex:1; min-width:120px; margin-bottom:0; }
+  .filtro-tipos-caja{ display:flex; gap:16px; margin-bottom:14px; }
+  .filtro-tipos-caja label{ display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:#D9CFC0; cursor:pointer; }
+  .fila-horario{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:13px; color:#D9CFC0; }
+  .fila-horario-dia{ display:flex; align-items:center; gap:6px; min-width:100px; cursor:pointer; }
+  .fila-horario input[type="time"]{ width:auto; padding:6px 8px; }
+  .filtro-tipos-caja input[type="checkbox"]{ width:16px; height:16px; accent-color: var(--gold); cursor:pointer; }
+  .resumen-caja{
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--radius-m);
+    padding: 14px 16px;
+    margin: 16px 0;
+  }
+  .fila-resumen{ display:flex; justify-content:space-between; padding: 4px 0; font-size:14px; color:#D9CFC0; }
+  .fila-resumen.total{
+    border-top: 1px solid var(--admin-line);
+    margin-top: 6px; padding-top:10px;
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+  .monto-venta{ color: var(--exito); font-weight:700; }
+  .monto-gasto{ color: var(--alerta-texto); font-weight:700; }
+  .positivo{ color: var(--exito); font-weight:700; }
+  .negativo{ color: var(--alerta-texto); font-weight:700; }
+  .grupo-dia{ margin: 18px 0; }
+  .cabecera-dia{
+    display:flex; justify-content:space-between;
+    font-family: var(--font-display);
+    font-weight:600; font-size:14px;
+    color: var(--gold);
+    padding-bottom:6px;
+    border-bottom: 1px solid var(--admin-line);
+    margin-bottom: 4px;
+  }
+  .fila-movimiento{
+    display:flex; justify-content:space-between;
+    padding: 7px 0;
+    font-size:13px;
+    border-bottom: 1px solid var(--admin-line);
+    color:#D9CFC0;
+  }
+
+  /* ---------- pantalla de configuración inicial ---------- */
+  .setup{
+    max-width: 640px; margin: 0 auto;
+    padding: 40px 24px;
+    font-family: var(--font-body);
+    line-height: 1.7;
+  }
+  .setup h1{ font-family: var(--font-display); color: var(--primary-dark); }
+  .setup code{
+    background: #F1E8D8; padding: 2px 6px; border-radius: 4px; font-size: 13px;
+  }
+  .setup pre{
+    background: var(--ink); color:#F2ECE2; padding:16px; border-radius: var(--radius-m);
+    overflow-x:auto; font-size: 12px; line-height:1.6;
+  }
+  .setup ol{ padding-left: 20px; }
+  .setup li{ margin-bottom: 10px; }
+  /* ---------- cartel de agradecimiento ---------- */
+  .cartel-gracias{
+    position: fixed; inset: 0;
+    background: rgba(43,36,30,.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index: 60;
+    padding: 20px;
+    animation: cicloCartelGracias 4s ease forwards;
+  }
+  .tarjeta-gracias{
+    background: var(--bg);
+    border-radius: 18px;
+    padding: 36px 40px;
+    text-align:center;
+    max-width: 300px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    animation: apareceGracias .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .check-animado{ width:64px; height:64px; display:block; margin:0 auto; }
+  .circulo-check{
+    stroke: var(--secondary);
+    stroke-width: 3;
+    stroke-dasharray: 145;
+    stroke-dashoffset: 145;
+    animation: dibujarCirculo .5s ease forwards;
+  }
+  .trazo-check{
+    stroke: var(--secondary);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 36;
+    stroke-dashoffset: 36;
+    animation: dibujarTrazo .3s .5s ease forwards;
+  }
+  .texto-gracias{
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 25px;
+    color: var(--primary-dark);
+    margin: 16px 0 0;
+  }
+  @keyframes apareceGracias{
+    from{ transform: scale(.75); opacity:0; }
+    to{ transform: scale(1); opacity:1; }
+  }
+  @keyframes dibujarCirculo{ to{ stroke-dashoffset:0; } }
+  @keyframes dibujarTrazo{ to{ stroke-dashoffset:0; } }
+  @keyframes cicloCartelGracias{
+    0%{ opacity:0; }
+    8%{ opacity:1; }
+    88%{ opacity:1; }
+    100%{ opacity:0; }
+  }
+
+  /* =========================================================
+     RotiYa — nueva portada visual
+     Mantiene la lógica/Firebase del HTML original.
+     ========================================================= */
+  .portada{
+    max-width:520px;
+    background:#0b0b0b;
+    color:#fff;
+    padding-bottom:42px;
+    overflow:hidden;
+  }
+
+  .franja-marca{
+    background:#070707;
+    padding:12px 0 10px;
+    min-height:88px;
+    border-bottom:1px solid #262626;
+    position:sticky;
+    top:0;
+    z-index:30;
+  }
+  .franja-marca img{
+    height:70px;
+    max-width:220px;
+    object-fit:contain;
+    filter:drop-shadow(0 4px 10px rgba(0,0,0,.45));
+  }
+
+  .buscador-global{
+    margin:15px 18px 6px;
+  }
+  .buscador-global input{
+    height:46px;
+    padding:0 16px 0 43px;
+    border:0;
+    border-radius:25px;
+    background:#fff;
+    color:#24201d;
+    box-shadow:0 5px 16px rgba(0,0,0,.28);
+    font-size:14px;
+  }
+  .buscador-global input::placeholder{color:#777;}
+  .buscador-global::before{
+    left:16px;
+    color:#333;
+    opacity:.7;
+  }
+
+  .banner-hero{
+    margin:14px 16px 8px;
+    min-height:138px;
+    padding:0;
+    border-radius:20px;
+    background:#211814;
+    box-shadow:0 12px 24px rgba(0,0,0,.42);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .banner-hero-img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .banner-hero:after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg,rgba(0,0,0,.78),rgba(0,0,0,.18));
+    pointer-events:none;
+  }
+  .banner-hero-overlay{
+    position:relative;
+    z-index:2;
+    min-height:138px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding:22px 22px;
+  }
+  .banner-hero .linea1{
+    font-family:var(--font-display);
+    font-size:24px;
+    font-style:italic;
+    margin:0;
+    color:#fff;
+  }
+  .banner-hero .linea2{
+    font-family:var(--font-display);
+    font-size:27px;
+    font-style:italic;
+    font-weight:700;
+    margin:0 0 9px;
+    color:#ffd12e;
+    text-decoration:none;
+  }
+  .banner-hero .linea3{
+    font-size:10px;
+    letter-spacing:1.8px;
+    opacity:.9;
+  }
+
+  .fila-rotiserias-wrap{
+    margin:14px 10px 2px;
+    gap:7px;
+  }
+  .flecha-carrusel{
+    width:36px;
+    height:36px;
+    flex:0 0 36px;
+    background:#252525;
+    border:1px solid #444;
+    color:#fff;
+    font-size:25px;
+    box-shadow:0 5px 10px rgba(0,0,0,.35);
+    z-index:3;
+  }
+
+  .fila-rotiserias{
+    gap:12px;
+    overflow-x:auto;
+    padding:8px 4px 14px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    touch-action:pan-x;
+    scrollbar-width:none;
+  }
+  .fila-rotiserias::-webkit-scrollbar{display:none;}
+
+  .rotiseria-avatar{
+    width:145px;
+    min-width:145px;
+    height:148px;
+    padding:13px 10px 11px;
+    border-radius:22px;
+    background:linear-gradient(145deg,#fff,#ece8e2);
+    border:2px solid rgba(255,255,255,.9);
+    box-shadow:0 13px 18px rgba(0,0,0,.42);
+    scroll-snap-align:start;
+    color:#29231e;
+    transition:transform .18s ease,box-shadow .18s ease;
+  }
+  .rotiseria-avatar:active{
+    transform:scale(.97);
+  }
+  .rotiseria-avatar img,
+  .rotiseria-avatar .sin-logo{
+    width:82px;
+    height:82px;
+    border-radius:50%;
+    border:3px solid #fff;
+    box-shadow:0 5px 12px rgba(0,0,0,.22);
+    margin-bottom:4px;
+  }
+  .rotiseria-avatar span{
+    font-size:12px;
+    font-weight:700;
+    color:#2c2722;
+  }
+  .rotiseria-avatar.rotiseria-cerrada img,
+  .rotiseria-avatar.rotiseria-cerrada .sin-logo{
+    opacity:.42;
+  }
+  .etiqueta-cerrada{
+    font-size:9px !important;
+    padding:2px 8px !important;
+  }
+
+  .dots-rotiserias{
+    margin:0 0 16px;
+    gap:5px;
+  }
+  .dots-rotiserias .dot{
+    width:7px;
+    height:7px;
+    background:#555;
+  }
+  .dots-rotiserias .dot.activo{
+    width:19px;
+    background:#e21a1a;
+  }
+
+  .banda-ofertas{
+    margin:0 12px 17px;
+    padding:13px 12px;
+    min-height:67px;
+    border-radius:22px;
+    background:linear-gradient(175deg,#d91b1b,#9c080b);
+    border:2px solid rgba(255,255,255,.82);
+    box-shadow:0 10px 18px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.22);
+    transform:rotate(-1deg);
+    position:relative;
+    overflow:hidden;
+  }
+  .banda-ofertas:before{
+    content:"";
+    position:absolute;
+    inset:7px -10px;
+    border:2px solid rgba(255,255,255,.18);
+    border-radius:50%;
+    transform:rotate(2deg);
+  }
+  .banda-ofertas h2{
+    position:relative;
+    z-index:2;
+    font-family:Impact,"Arial Black",sans-serif;
+    font-style:normal;
+    font-size:31px;
+    line-height:1;
+    letter-spacing:.8px;
+    text-shadow:3px 4px 0 #6c0807,0 7px 12px rgba(0,0,0,.4);
+  }
+  .banda-ofertas h2 b{
+    color:#ffd229;
+  }
+  .ofertas-deco{
+    position:relative;
+    z-index:2;
+    font-size:25px;
+    color:#ffd229;
+    text-shadow:0 2px 5px #7b0908;
+  }
+
+  .grilla-promos{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:27px 18px;
+    padding:7px 18px 12px;
+  }
+  .tarjeta-promo{
+    min-height:245px;
+    padding-bottom:4px;
+    border-radius:24px;
+    background:linear-gradient(150deg,#fdfcf9,#e9e5df);
+    border:2px solid #fff;
+    box-shadow:0 17px 22px rgba(0,0,0,.58);
+    transform-style:preserve-3d;
+    transition:transform .16s ease,box-shadow .16s ease;
+  }
+  .tarjeta-promo:after{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    left:7px;
+    right:-8px;
+    bottom:-12px;
+    height:24px;
+    border-radius:0 0 22px 22px;
+    background:linear-gradient(#a70a0d,#650507);
+    transform:translateZ(-8px) skewX(-5deg);
+    box-shadow:0 10px 12px rgba(0,0,0,.4);
+  }
+  .tarjeta-promo .promo-foto{
+    width:calc(100% - 10px);
+    margin:5px auto 0;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:20px;
+    background:#ddd;
+    box-shadow:0 9px 13px rgba(0,0,0,.35);
+    transform:translateZ(18px) rotate(-2deg);
+  }
+  .tarjeta-promo:nth-child(even) .promo-foto{
+    transform:translateZ(18px) rotate(2deg);
+  }
+  .tarjeta-promo .promo-nombre{
+    left:10px;
+    right:10px;
+    bottom:41px;
+    max-width:none;
+    background:rgba(255,255,255,.96);
+    border-radius:12px;
+    padding:7px 9px;
+    font-family:var(--font-display);
+    font-size:13px;
+    font-weight:700;
+    box-shadow:0 4px 8px rgba(0,0,0,.18);
+  }
+  .tarjeta-promo > .precio{
+    position:absolute;
+    z-index:4;
+    left:10px;
+    bottom:10px;
+    padding:4px 9px;
+    border-radius:10px;
+    background:#c91013;
+    color:#fff;
+    font-size:15px;
+    font-weight:800;
+    box-shadow:0 4px 8px rgba(0,0,0,.35);
+  }
+
+  .resultado-item{
+    color:#222;
+  }
+
+  @media (max-width:390px){
+    .rotiseria-avatar{width:132px;min-width:132px;height:143px;}
+    .rotiseria-avatar img,.rotiseria-avatar .sin-logo{width:76px;height:76px;}
+    .banda-ofertas h2{font-size:27px;}
+    .grilla-promos{gap:23px 14px;padding-left:14px;padding-right:14px;}
+    .tarjeta-promo{min-height:225px;}
+  }
+
+  @media (min-width:700px){
+    .portada{max-width:760px;}
+    .fila-rotiserias{gap:16px;}
+    .rotiseria-avatar{width:150px;min-width:150px;}
+    .grilla-promos{grid-template-columns:repeat(3,minmax(0,1fr));}
+  }
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ======================================================================
+   1) CONFIGURACIÓN — completar con los datos de tu proyecto de Firebase
+   ====================================================================== */
+
+// Reemplazá esto con la configuración de TU proyecto Firebase
+// (Firebase console → ⚙ Configuración del proyecto → tus apps → SDK setup)
+const firebaseConfig = {
+  apiKey: "AIzaSyDLFpAHmARHugfwuns2s-A_uz9MtYzdXXI",
+  authDomain: "rotiya-63332.firebaseapp.com",
+  projectId: "rotiya-63332",
+  storageBucket: "rotiya-63332.firebasestorage.app",
+  messagingSenderId: "752074252614",
+  appId: "1:752074252614:web:ca277abd07bb52ed744547"
+};
+
+/* ====================================================================== */
+
+const SIN_CONFIGURAR = firebaseConfig.apiKey === "PEGAR_TU_API_KEY_AQUI";
+
+let db = null;
+let auth = null;
+if(!SIN_CONFIGURAR){
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  auth = firebase.auth();
+}
+
+// Cada rotisería vive en rotiserias/{uid}, con sus propias sub-colecciones.
+function refRotiserias(){ return db.collection("rotiserias"); }
+function refRotiseria(id){ return db.collection("rotiserias").doc(id); }
+function refComidas(id){ return refRotiseria(id).collection("comidas"); }
+function refPedidos(id){ return refRotiseria(id).collection("pedidos"); }
+function refMovimientos(id){ return refRotiseria(id).collection("movimientos"); }
+
+// ---------- estado ----------
+let comidas = [];
+let pedidos = [];
+let configNegocio = { nombreNegocio: "Mi Menú", tagline: "Pedidos online", telefono: "", transferenciaAlias: "", transferenciaCBU: "", direccionRetiro: "", costoEnvio: 0, horarioActivo: false, horarios: horariosPorDefecto() };
+let categoriaActiva = "Todas";
+let cart = [];
+let formCheckout = { nombre: "", telefono: "", tipoEntrega: "retiro", direccion: "", metodoPago: "efectivo", notas: "" };
+function resetFormCheckout(){
+  formCheckout = { nombre: "", telefono: "", tipoEntrega: "retiro", direccion: "", metodoPago: "efectivo", notas: "" };
+}
+let vista = "home";
+let rotiseriaClienteId = null;   // qué rotisería está mirando el cliente ahora
+let rotiseriaAdminId = null;     // uid de la rotisería logueada en el panel
+let rotiseriasHome = [];         // rotiserías activas, para la portada
+let promoBoard = [];             // productos "promoción del día" de todas las rotiserías
+let comidasGlobales = [];         // todos los platos de todas las rotiserías, para el buscador
+let comidasGlobalesCargando = false;
+let busquedaGlobal = "";
+let unsubComidas = null;
+let unsubConfig = null;
+let unsubHome = null;
+let unsubsPromo = {};
+let vistaLogin = "login";        // "login" | "registro" | "recuperar"
+let formRegistro = { nombreNegocio: "", email: "", password: "" };
+let mensajeRecuperar = "";
+let cargandoLogin = false;
+let carritoAbierto = false;
+let mostrarGracias = false;
+let checkoutAbierto = false;
+let pedidoConfirmado = null;
+let errorLogin = "";
+let errorRegistro = "";
+let adminTab = "comidas";
+let filtroPedidos = "activos";
+let editandoComidaId = null;
+let mostrandoFormComida = false;
+let unsubPedidos = null;
+let cantidadPedidosPrevia = null;
+let unsubSeguimiento = null;
+let estadoPedidoAnterior = null;
+let movimientos = [];
+let unsubMovimientos = null;
+let mostrandoFormGasto = false;
+let borradorMensajes = {};
+let filtroFechaDesde = "";
+let filtroFechaHasta = "";
+let filtroTiposCaja = { venta: true, gasto: true };
+const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+let buscandoPedido = false;
+let imagenAmpliadaId = null;
+let errorBusqueda = "";
+let pedidoFactura = null; // pedido seleccionado para mostrar el ticket imprimible
+
+// ---------- ruteo (portada / #r/{rotiseriaId} / #admin) ----------
+function leerHash(){
+  const h = location.hash;
+  if(h === "#admin") return { tipo: "admin" };
+  if(h.indexOf("#r/") === 0) return { tipo: "cliente", id: decodeURIComponent(h.slice(3)) };
+  return { tipo: "home" };
+}
+function aplicarRuta(){
+  const ruta = leerHash();
+  desuscribirCliente();
+  desuscribirPedidos();
+  desuscribirMovimientos();
+  desuscribirHome();
+  if(ruta.tipo === "admin"){
+    if(rotiseriaAdminId){
+      vista = "admin";
+      suscribirAdmin(rotiseriaAdminId);
+    } else {
+      vista = "admin-login";
+    }
+  } else if(ruta.tipo === "cliente"){
+    vista = "cliente";
+    if(rotiseriaClienteId !== ruta.id){ cart = []; categoriaActiva = "Todas"; }
+    rotiseriaClienteId = ruta.id;
+    suscribirCliente(ruta.id);
+  } else {
+    const idGuardado = localStorage.getItem("pedido_seguimiento_id");
+    const rotGuardada = localStorage.getItem("pedido_seguimiento_rotiseria");
+    if(idGuardado && rotGuardada && location.hash === ""){
+      location.hash = "#r/" + encodeURIComponent(rotGuardada);
+      return; // el cambio de hash vuelve a disparar aplicarRuta()
+    }
+    vista = "home";
+    suscribirHome();
+  }
+  render();
+}
+window.addEventListener("hashchange", aplicarRuta);
+
+// ---------- utilidades ----------
+function money(n){
+  return "$" + Number(n||0).toLocaleString("es-AR");
+}
+function esc(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+// Muestra cantidades con medias unidades como "1½" en vez de "1.5"
+function formatearCantidad(n){
+  const entero = Math.floor(n);
+  const esMedia = Math.abs(n - entero - 0.5) < 0.001;
+  if(esMedia) return (entero === 0 ? "" : entero) + "½";
+  return String(n);
+}
+
+function horariosPorDefecto(){
+  const dias = {};
+  for(let d = 0; d < 7; d++) dias[d] = { activo: true, desde: "09:00", hasta: "22:00" };
+  return dias;
+}
+
+// Calcula si una rotisería está abierta ahora mismo según su horario configurado.
+// Si el dueño no activó el horario de atención, se puede pedir siempre.
+function estadoNegocioAhora(config){
+  config = config || configNegocio;
+  if(!config.horarioActivo || !config.horarios) return { abierto: true, cierraPronto: false };
+  const ahora = new Date();
+  const cfgDia = config.horarios[ahora.getDay()];
+  if(!cfgDia || !cfgDia.activo || !cfgDia.desde || !cfgDia.hasta) return { abierto: false, cierraPronto: false };
+
+  const minutosAhora = ahora.getHours() * 60 + ahora.getMinutes();
+  const [hd, md] = cfgDia.desde.split(":").map(Number);
+  const [hh, mh] = cfgDia.hasta.split(":").map(Number);
+  const minDesde = hd * 60 + md;
+  const minHasta = hh * 60 + mh;
+  const cruzaMedianoche = minHasta <= minDesde;
+
+  const abierto = cruzaMedianoche
+    ? (minutosAhora >= minDesde || minutosAhora < minHasta)
+    : (minutosAhora >= minDesde && minutosAhora < minHasta);
+
+  if(!abierto) return { abierto: false, cierraPronto: false };
+
+  const minutosParaCierre = (cruzaMedianoche && minutosAhora >= minDesde)
+    ? ((1440 - minutosAhora) + minHasta)
+    : (minHasta - minutosAhora);
+
+  return { abierto: true, cierraPronto: minutosParaCierre <= 30, horaCierre: cfgDia.hasta };
+}
+let audioCtxAviso = null;
+function obtenerAudioCtxAviso(){
+  if(!audioCtxAviso){
+    try{ audioCtxAviso = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  return audioCtxAviso;
+}
+// los navegadores solo permiten sonido después de una interacción del usuario:
+// esto "despierta" el audio la primera vez que el admin toca la pantalla.
+["click", "touchstart"].forEach(ev => document.addEventListener(ev, () => {
+  const ctx = obtenerAudioCtxAviso();
+  if(ctx && ctx.state === "suspended") ctx.resume().catch(()=>{});
+}));
+
+function beep(){
+  try{
+    const ctx = obtenerAudioCtxAviso();
+    if(!ctx) return;
+    if(ctx.state === "suspended") ctx.resume().catch(()=>{});
+    [0, 180].forEach(delay => {
+      setTimeout(() => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.frequency.value = 740; g.gain.value = 0.08;
+        o.start(); o.stop(ctx.currentTime + 0.12);
+      }, delay);
+    });
+  }catch(e){}
+}
+
+/* ======================================================================
+   2) DATOS EN VIVO (Firestore)
+   ====================================================================== */
+if(auth){
+  auth.onAuthStateChanged(user => {
+    rotiseriaAdminId = user ? user.uid : null;
+    aplicarRuta();
+  });
+} else if(!SIN_CONFIGURAR){
+  aplicarRuta();
+}
+
+function desuscribirCliente(){
+  if(unsubComidas){ unsubComidas(); unsubComidas = null; }
+  if(unsubConfig){ unsubConfig(); unsubConfig = null; }
+}
+function suscribirCliente(id){
+  desuscribirCliente();
+  comidas = [];
+  configNegocio = { nombreNegocio: "Mi Menú", tagline: "Pedidos online", telefono: "", transferenciaAlias: "", transferenciaCBU: "", direccionRetiro: "", costoEnvio: 0, horarioActivo: false, horarios: horariosPorDefecto() };
+  const idGuardado = localStorage.getItem("pedido_seguimiento_id");
+  const rotGuardada = localStorage.getItem("pedido_seguimiento_rotiseria");
+  if(idGuardado && rotGuardada === id){
+    iniciarSeguimiento(id, idGuardado);
+  } else if(unsubSeguimiento || pedidoConfirmado){
+    // veníamos mostrando el seguimiento de un pedido de OTRA rotisería: se sigue guardando,
+    // pero no se muestra mientras el cliente está mirando el menú de esta.
+    if(unsubSeguimiento){ unsubSeguimiento(); unsubSeguimiento = null; }
+    pedidoConfirmado = null;
+    estadoPedidoAnterior = null;
+  }
+  unsubComidas = refComidas(id).orderBy("categoria").onSnapshot(snap => {
+    comidas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
+  unsubConfig = refRotiseria(id).onSnapshot(doc => {
+    if(doc.exists) configNegocio = { ...configNegocio, ...doc.data() };
+    render();
+  });
+}
+
+function desuscribirHome(){
+  if(unsubHome){ unsubHome(); unsubHome = null; }
+  Object.keys(unsubsPromo).forEach(id => unsubsPromo[id]());
+  unsubsPromo = {};
+}
+function suscribirHome(){
+  if(unsubHome) return;
+  unsubHome = refRotiserias().onSnapshot(snap => {
+    const activas = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(r => r.activo !== false);
+    rotiseriasHome = activas;
+    const idsActuales = activas.map(r => r.id);
+    Object.keys(unsubsPromo).forEach(id => {
+      if(idsActuales.indexOf(id) === -1){
+        unsubsPromo[id]();
+        delete unsubsPromo[id];
+        promoBoard = promoBoard.filter(p => p.rotiseriaId !== id);
+      }
+    });
+    activas.forEach(r => {
+      if(unsubsPromo[r.id]) return;
+      unsubsPromo[r.id] = refComidas(r.id).where("promocionDia", "==", true).limit(2).onSnapshot(snapP => {
+        const items = snapP.docs.map(d => ({ id: d.id, ...d.data(), rotiseriaId: r.id, rotiseriaNombre: r.nombreNegocio, rotiseriaLogo: r.logo }));
+        promoBoard = promoBoard.filter(p => p.rotiseriaId !== r.id).concat(items);
+        render();
+      });
+    });
+    render();
+  });
+}
+
+function suscribirAdmin(id){
+  suscribirCliente(id);
+  suscribirPedidos(id);
+  suscribirMovimientos(id);
+}
+
+function suscribirPedidos(id){
+  if(unsubPedidos) return;
+  unsubPedidos = refPedidos(id).orderBy("creado", "desc").onSnapshot(snap => {
+    pedidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const nuevos = pedidos.filter(p => p.estado === "nuevo").length;
+    if(cantidadPedidosPrevia !== null && nuevos > cantidadPedidosPrevia){
+      beep();
+      notificarPedidoNuevo(nuevos - cantidadPedidosPrevia);
+    }
+    cantidadPedidosPrevia = nuevos;
+    actualizarBadge(nuevos);
+    render();
+  });
+}
+function desuscribirPedidos(){
+  if(unsubPedidos){ unsubPedidos(); unsubPedidos = null; }
+}
+
+function actualizarBadge(nuevos){
+  if(!("setAppBadge" in navigator)) return;
+  try{
+    if(nuevos > 0) navigator.setAppBadge(nuevos).catch(()=>{});
+    else navigator.clearAppBadge().catch(()=>{});
+  }catch(e){}
+}
+
+function notificarPedidoNuevo(cantidadNuevos){
+  if(!("Notification" in window) || Notification.permission !== "granted") return;
+  const texto = cantidadNuevos > 1 ? `Llegaron ${cantidadNuevos} pedidos nuevos` : "Llegó un pedido nuevo";
+  const titulo = configNegocio.nombreNegocio || "RotiYA";
+  const opciones = { body: texto, tag: "pedido-nuevo", renotify: true, icon: configNegocio.logo || undefined };
+  // si hay un service worker ya activo controlando la página, lo usamos (mejor integración con Android);
+  // si no, o si tarda, avisamos igual con una notificación directa para no quedarnos sin avisar.
+  if(navigator.serviceWorker && navigator.serviceWorker.controller){
+    let yaAviso = false;
+    const avisarDirecto = () => { if(!yaAviso){ yaAviso = true; try{ new Notification(titulo, opciones); }catch(e){} } };
+    const limite = setTimeout(avisarDirecto, 1500);
+    navigator.serviceWorker.ready.then(reg => {
+      clearTimeout(limite);
+      if(yaAviso) return;
+      yaAviso = true;
+      reg.showNotification(titulo, opciones).catch(avisarDirecto);
+    }).catch(avisarDirecto);
+  } else {
+    try{ new Notification(titulo, opciones); }catch(e){}
+  }
+}
+
+function pedirPermisoNotificaciones(){
+  if(!("Notification" in window)){ render(); return; }
+  Notification.requestPermission().then(() => render());
+}
+
+/* ======================================================================
+   3) LADO CLIENTE
+   ====================================================================== */
+function verImagenAmpliada(id){
+  imagenAmpliadaId = id;
+  render();
+}
+function cerrarImagenAmpliada(){
+  imagenAmpliadaId = null;
+  render();
+}
+function renderVisorImagen(){
+  const c = comidas.find(x => x.id === imagenAmpliadaId);
+  if(!c || !c.imagen) return "";
+  return `
+    <div class="fondo-hoja" onclick="if(event.target===this) cerrarImagenAmpliada()">
+      <div class="hoja-imagen">
+        <div class="hoja-header"><h2>${esc(c.nombre)}</h2><button class="cerrar" onclick="cerrarImagenAmpliada()">×</button></div>
+        <img src="${c.imagen}">
+      </div>
+    </div>
+  `;
+}
+
+function agregarAlCarrito(id){
+  const comida = comidas.find(c => c.id === id);
+  if(!comida) return;
+  const existente = cart.find(c => c.id === id);
+  if(existente) existente.cantidad++;
+  else cart.push({ id, nombre: comida.nombre, precio: comida.precio, cantidad: 1, permiteMedias: !!comida.permiteMedias });
+  render();
+}
+function cambiarCantidad(id, delta){
+  const item = cart.find(c => c.id === id);
+  if(!item) return;
+  item.cantidad += delta;
+  if(item.cantidad <= 0) cart = cart.filter(c => c.id !== id);
+  render();
+}
+function quitarDelCarrito(id){
+  cart = cart.filter(c => c.id !== id);
+  render();
+}
+function subtotalCarrito(){
+  return cart.reduce((t, i) => t + i.precio * i.cantidad, 0);
+}
+function costoEnvioActual(){
+  return formCheckout.tipoEntrega === "envio" ? Number(configNegocio.costoEnvio || 0) : 0;
+}
+function totalCarrito(){
+  return subtotalCarrito() + costoEnvioActual();
+}
+function cantidadEnCarrito(id){
+  const item = cart.find(c => c.id === id);
+  return item ? item.cantidad : 0;
+}
+function abrirCarrito(){ carritoAbierto = true; render(); }
+function cerrarCarrito(){ carritoAbierto = false; render(); }
+function irACheckout(){ carritoAbierto = false; checkoutAbierto = true; render(); }
+function cerrarCheckout(){ checkoutAbierto = false; render(); }
+function setCategoria(cat){ categoriaActiva = cat; render(); }
+
+async function confirmarPedido(){
+  if(!estadoNegocioAhora().abierto){
+    alert("En este momento la rotisería está cerrada, así que no se puede confirmar el pedido.");
+    return;
+  }
+  const nombre = formCheckout.nombre.trim();
+  const telefono = formCheckout.telefono.trim();
+  const tipoEntrega = formCheckout.tipoEntrega;
+  const direccion = tipoEntrega === "envio" ? formCheckout.direccion.trim() : "";
+  const metodoPago = formCheckout.metodoPago;
+  const notas = formCheckout.notas.trim();
+
+  if(!nombre || !telefono || (tipoEntrega === "envio" && !direccion)){
+    alert("Completá nombre, teléfono" + (tipoEntrega === "envio" ? " y dirección" : "") + " para continuar.");
+    return;
+  }
+
+  const boton = document.getElementById("btn-confirmar-pedido");
+  boton.disabled = true; boton.textContent = "Enviando...";
+
+  try{
+    const comprobante = await leerImagenComprimida("cli-comprobante", 700, 0.75);
+    const numero = await generarNumeroPedido();
+    const codigo = generarCodigoPedido();
+    const subtotalPedido = subtotalCarrito();
+    const costoEnvio = costoEnvioActual();
+    const totalPedido = subtotalPedido + costoEnvio;
+    const datosPedido = {
+      numero, codigo, nombre, telefono, tipoEntrega, direccion, metodoPago, notas,
+      items: cart.map(i => ({ nombre: i.nombre, precio: i.precio, cantidad: i.cantidad })),
+      subtotal: subtotalPedido,
+      costoEnvio,
+      total: totalPedido,
+      estado: "nuevo",
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    if(comprobante) datosPedido.comprobante = comprobante;
+    const refPedido = await refPedidos(rotiseriaClienteId).add(datosPedido);
+    refMovimientos(rotiseriaClienteId).add({
+      tipo: "venta",
+      descripcion: "Pedido #" + numero,
+      monto: totalPedido,
+      pedidoNumero: numero,
+      fecha: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    cart = [];
+    checkoutAbierto = false;
+    resetFormCheckout();
+    iniciarSeguimiento(rotiseriaClienteId, refPedido.id);
+    mostrarGracias = true;
+    setTimeout(() => { mostrarGracias = false; render(); }, 4000);
+  }catch(e){
+    alert("No se pudo enviar el pedido. Probá de nuevo.");
+    boton.disabled = false; boton.textContent = "Confirmar pedido";
+  }
+  render();
+}
+
+// Genera un código corto para que el cliente pueda guardarlo y buscar su pedido después.
+function generarCodigoPedido(){
+  const caracteres = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sin O/0 ni I/1 para evitar confusiones
+  let codigo = "";
+  for(let i = 0; i < 6; i++) codigo += caracteres[Math.floor(Math.random() * caracteres.length)];
+  return codigo;
+}
+
+// Lee un <input type="file"> por id, lo redimensiona/comprime y devuelve un dataURL (o null si no hay archivo).
+function leerImagenComprimida(inputId, maxLado, calidad){
+  return new Promise(resolve => {
+    const input = document.getElementById(inputId);
+    const archivo = input && input.files && input.files[0];
+    if(!archivo){ resolve(null); return; }
+    const lector = new FileReader();
+    lector.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let ancho = img.width, alto = img.height;
+        if(ancho > alto && ancho > maxLado){ alto = Math.round(alto * (maxLado / ancho)); ancho = maxLado; }
+        else if(alto > maxLado){ ancho = Math.round(ancho * (maxLado / alto)); alto = maxLado; }
+        const canvas = document.createElement("canvas");
+        canvas.width = ancho; canvas.height = alto;
+        canvas.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+        resolve(canvas.toDataURL("image/jpeg", calidad));
+      };
+      img.onerror = () => resolve(null);
+      img.src = e.target.result;
+    };
+    lector.onerror = () => resolve(null);
+    lector.readAsDataURL(archivo);
+  });
+}
+async function generarNumeroPedido(){
+  const ref = refRotiseria(rotiseriaClienteId);
+  let numero;
+  await db.runTransaction(async t => {
+    const doc = await t.get(ref);
+    const actual = doc.exists ? (doc.data().ultimoPedido || 0) : 0;
+    numero = actual + 1;
+    t.set(ref, { ultimoPedido: numero }, { merge: true });
+  });
+  return numero;
+}
+
+// Sigue en vivo el estado de un pedido puntual y avisa con sonido cuando pasa a "en camino".
+function iniciarSeguimiento(rotiseriaId, id){
+  if(unsubSeguimiento) unsubSeguimiento();
+  localStorage.setItem("pedido_seguimiento_id", id);
+  localStorage.setItem("pedido_seguimiento_rotiseria", rotiseriaId);
+  unsubSeguimiento = refPedidos(rotiseriaId).doc(id).onSnapshot(doc => {
+    if(!doc.exists){ finalizarSeguimiento(); return; }
+    const datos = doc.data();
+    if(estadoPedidoAnterior !== null && estadoPedidoAnterior !== datos.estado && datos.estado === "en_camino"){
+      beep();
+    }
+    estadoPedidoAnterior = datos.estado;
+    pedidoConfirmado = { id, ...datos };
+    render();
+  });
+}
+function finalizarSeguimiento(){
+  if(unsubSeguimiento){ unsubSeguimiento(); unsubSeguimiento = null; }
+  localStorage.removeItem("pedido_seguimiento_id");
+  localStorage.removeItem("pedido_seguimiento_rotiseria");
+  pedidoConfirmado = null;
+  estadoPedidoAnterior = null;
+  render();
+}
+
+function copiarCodigo(codigo){
+  const avisar = () => {
+    const boton = document.getElementById("btn-copiar-codigo");
+    if(boton){
+      const original = boton.textContent;
+      boton.textContent = "¡Copiado!";
+      setTimeout(() => { boton.textContent = original; }, 1500);
+    }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(codigo).then(avisar).catch(() => alert("Tu código es: " + codigo));
+  } else {
+    alert("Tu código es: " + codigo);
+  }
+}
+
+function abrirBusquedaPedido(){ buscandoPedido = true; errorBusqueda = ""; render(); }
+function cerrarBusquedaPedido(){ buscandoPedido = false; render(); }
+async function buscarPedido(){
+  const valor = document.getElementById("buscar-codigo").value.trim().toUpperCase();
+  if(!valor){ errorBusqueda = "Ingresá el código de tu pedido."; render(); return; }
+  const boton = document.getElementById("btn-buscar-pedido");
+  if(boton){ boton.disabled = true; boton.textContent = "Buscando..."; }
+  try{
+    const snap = await refPedidos(rotiseriaClienteId).where("codigo", "==", valor).limit(1).get();
+    if(snap.empty){
+      errorBusqueda = "No encontramos ningún pedido con ese código.";
+      render();
+      return;
+    }
+    buscandoPedido = false;
+    render();
+    iniciarSeguimiento(rotiseriaClienteId, snap.docs[0].id);
+  }catch(e){
+    errorBusqueda = "Hubo un problema buscando el pedido. Probá de nuevo.";
+    render();
+  }
+}
+function renderHojaBusqueda(){
+  return `
+    <div class="fondo-hoja" onclick="if(event.target===this) cerrarBusquedaPedido()">
+      <div class="hoja">
+        <div class="hoja-header"><h2>Seguir mi pedido</h2><button class="cerrar" onclick="cerrarBusquedaPedido()">×</button></div>
+        <div class="campo"><label>Código de tu pedido</label><input id="buscar-codigo" placeholder="Ej: XQ2M8B" maxlength="6" style="text-transform:uppercase;"></div>
+        ${errorBusqueda ? `<div class="error-texto">${esc(errorBusqueda)}</div>` : ""}
+        <button class="btn-primario" id="btn-buscar-pedido" onclick="buscarPedido()">Buscar</button>
+      </div>
+    </div>
+  `;
+}
+
+function inicialesNombre(nombre){
+  return (nombre || "?").trim().split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
+}
+function abrirRotiseria(id){ location.hash = "#r/" + encodeURIComponent(id); }
+
+function cambiarBusquedaGlobal(valor){
+  busquedaGlobal = valor;
+  if(valor.trim() && comidasGlobales.length === 0 && !comidasGlobalesCargando) cargarComidasGlobales();
+  render();
+}
+
+// Trae, una sola vez, todos los platos de todas las rotiserías activas para poder buscarlos.
+function cargarComidasGlobales(){
+  if(comidasGlobalesCargando) return;
+  comidasGlobalesCargando = true;
+  db.collectionGroup("comidas").get().then(snap => {
+    comidasGlobales = snap.docs
+      .filter(d => d.data().disponible !== false)
+      .map(d => {
+        const rid = d.ref.parent.parent.id;
+        const r = rotiseriasHome.find(x => x.id === rid);
+        return { id: d.id, ...d.data(), rotiseriaId: rid, rotiseriaNombre: r ? r.nombreNegocio : "Rotisería" };
+      });
+    comidasGlobalesCargando = false;
+    render();
+  }).catch(() => { comidasGlobalesCargando = false; render(); });
+}
+
+function moverCarrusel(dir){
+  const cont = document.getElementById("fila-rotiserias");
+  if(cont) cont.scrollBy({ left: dir * cont.clientWidth * 0.9, behavior: "smooth" });
+}
+
+// Arma los puntitos de paginación del carrusel de rotiserías y los mantiene sincronizados al deslizar.
+function engancharCarruselHome(){
+  const cont = document.getElementById("fila-rotiserias");
+  const dots = document.getElementById("dots-rotiserias");
+  if(!cont || !dots) return;
+  const totalPaginas = Math.max(1, Math.round(cont.scrollWidth / cont.clientWidth));
+  if(totalPaginas <= 1){ dots.style.display = "none"; return; }
+  dots.innerHTML = Array.from({ length: totalPaginas }).map((_, i) => `<span class="dot ${i === 0 ? "activo" : ""}"></span>`).join("");
+  cont.onscroll = () => {
+    const pagina = Math.min(totalPaginas - 1, Math.round(cont.scrollLeft / cont.clientWidth));
+    dots.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("activo", i === pagina));
+  };
+}
+
+function renderHome(){
+  const resultados = busquedaGlobal.trim()
+    ? comidasGlobales.filter(c => (c.nombre || "").toLowerCase().includes(busquedaGlobal.trim().toLowerCase()) || (c.categoria || "").toLowerCase().includes(busquedaGlobal.trim().toLowerCase()))
+    : [];
+  return `
+    <div class="portada">
+      <div class="franja-marca"><img src="assets/logo.png" alt="RotiYa"></div>
+
+      <div class="buscador-global">
+        <input type="text" placeholder="Buscar productos, comidas o categorías..." value="${esc(busquedaGlobal)}" oninput="cambiarBusquedaGlobal(this.value)">
+      </div>
+      ${busquedaGlobal.trim() ? (
+        resultados.length > 0 ? `
+          <div class="resultados-busqueda">
+            ${resultados.slice(0, 12).map(c => `
+              <div class="resultado-item" onclick="abrirRotiseria('${c.rotiseriaId}')">
+                ${c.imagen ? `<img src="${c.imagen}">` : `<div style="width:40px; height:40px; border-radius:8px; background:var(--bg); flex:0 0 auto;"></div>`}
+                <div class="info">
+                  <div class="nom">${esc(c.nombre)}</div>
+                  <div class="neg">${esc(c.rotiseriaNombre)}</div>
+                </div>
+                <div class="precio">${money(c.precio)}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : `<div class="sin-resultados">${comidasGlobalesCargando ? "Buscando..." : "No encontramos nada con eso."}</div>`
+      ) : `
+
+      <div class="banner-hero">
+        <img class="banner-hero-img" src="assets/hero-banner.jpg" alt="RotiYa">
+        <div class="banner-hero-overlay">
+          <p class="linea1">El sabor casero</p>
+          <p class="linea2">en tu mesa</p>
+          <p class="linea3">ROTISERÍA · COMIDAS · ENSALADAS</p>
+        </div>
+      </div>
+
+      ${rotiseriasHome.length === 0 ? `<div class="vacio" style="margin:20px;">Todavía no hay rotiserías disponibles.</div>` : `
+        <div class="fila-rotiserias-wrap">
+          <button class="flecha-carrusel" onclick="moverCarrusel(-1)">‹</button>
+          <div class="fila-rotiserias" id="fila-rotiserias">
+            ${rotiseriasHome.map(r => {
+              const estado = estadoNegocioAhora(r);
+              return `
+              <button class="rotiseria-avatar ${!estado.abierto ? "rotiseria-cerrada" : ""}" onclick="abrirRotiseria('${r.id}')">
+                ${r.logo ? `<img src="${r.logo}">` : `<div class="sin-logo">${esc(inicialesNombre(r.nombreNegocio))}</div>`}
+                <span>${esc(r.nombreNegocio || "Rotisería")}</span>
+                ${!estado.abierto ? `<span class="etiqueta-cerrada">Cerrado</span>` : ""}
+              </button>
+            `;
+            }).join("")}
+          </div>
+          <button class="flecha-carrusel" onclick="moverCarrusel(1)">›</button>
+        </div>
+        <div class="dots-rotiserias" id="dots-rotiserias"></div>
+      `}
+      ${promoBoard.length > 0 ? `
+        <div class="banda-ofertas"><span class="ofertas-deco">✦</span><h2>OFERTAS <b>DEL DÍA</b></h2><span class="ofertas-deco">✦</span></div>
+        <div class="grilla-promos">
+          ${promoBoard.map(p => `
+            <div class="tarjeta-promo" onclick="abrirRotiseria('${p.rotiseriaId}')">
+              ${p.imagen ? `<img class="promo-foto" src="${p.imagen}">` : `<div class="promo-foto"></div>`}
+              <div class="promo-nombre">${esc(p.nombre)}</div>
+              <span class="precio">${money(p.precio)}</span>
+            </div>
+          `).join("")}
+        </div>
+      ` : ""}
+      `}
+    </div>
+  `;
+}
+
+function renderCliente(){
+  const disponibles = comidas.filter(c => c.disponible !== false || true);
+  const categorias = ["Todas", ...new Set(comidas.map(c => c.categoria).filter(Boolean))];
+  const items = categoriaActiva === "Todas" ? comidas : comidas.filter(c => c.categoria === categoriaActiva);
+  const porCategoria = {};
+  items.forEach(c => { (porCategoria[c.categoria || "Menú"] ??= []).push(c); });
+  const estadoNegocio = estadoNegocioAhora();
+
+  if(pedidoConfirmado){
+    return `<div class="contenedor" style="padding-bottom:20px;">${renderSeguimiento(pedidoConfirmado)}</div>`;
+  }
+
+  return `
+    <div class="contenedor">
+      <div class="encabezado">
+        <a href="#" onclick="location.hash=''; return false;" style="font-size:12px; color:var(--ink-soft); text-decoration:none;">← Otras rotiserías</a>
+        <h1>${esc(configNegocio.nombreNegocio)}</h1>
+        <div class="fila-tagline">
+          <p>${esc(configNegocio.tagline)}</p>
+          <a href="#" class="link-seguimiento" onclick="abrirBusquedaPedido(); return false;">Seguí tu pedido 👉 Aquí</a>
+        </div>
+      </div>
+      ${!estadoNegocio.abierto ? `<div class="aviso-horario cerrado">Cerrado</div>`
+        : estadoNegocio.cierraPronto ? `<div class="aviso-horario cierra-pronto">Cierra pronto</div>` : ""}
+      <div class="categorias">
+        ${categorias.map(c => `<button class="chip ${c === categoriaActiva ? "activo" : ""}" onclick="setCategoria('${esc(c)}')">${esc(c)}</button>`).join("")}
+      </div>
+      ${comidas.length === 0 ? `<div class="vacio">Todavía no hay comidas cargadas.</div>` : ""}
+      ${Object.keys(porCategoria).map(cat => `
+        <div class="grupo-categoria">
+          <h2>${esc(cat)}</h2>
+          ${porCategoria[cat].map(c => renderItemMenu(c, estadoNegocio)).join("")}
+        </div>
+      `).join("")}
+      ${cart.length > 0 ? `
+        <div class="barra-carrito">
+          <div class="txt">${formatearCantidad(cart.reduce((n,i)=>n+i.cantidad,0))} producto(s)<b>${money(totalCarrito())}</b></div>
+          <button onclick="abrirCarrito()">Ver pedido</button>
+        </div>
+      ` : ""}
+      <div class="acceso-admin">
+        <div><a href="#admin">Acceso administrador</a></div>
+      </div>
+    </div>
+    ${carritoAbierto ? renderHojaCarrito() : ""}
+    ${checkoutAbierto ? renderHojaCheckout() : ""}
+    ${buscandoPedido ? renderHojaBusqueda() : ""}
+    ${imagenAmpliadaId ? renderVisorImagen() : ""}
+  `;
+}
+
+function renderSeguimiento(p){
+  const pasos = [
+    { id: "nuevo", label: "Pedido recibido" },
+    { id: "preparando", label: "En preparación" },
+    { id: "listo", label: "Listo" },
+    { id: "en_camino", label: "En camino" },
+    { id: "entregado", label: "Entregado" }
+  ].filter(paso => paso.id !== "en_camino" || p.tipoEntrega === "envio");
+  const indiceActual = pasos.findIndex(paso => paso.id === p.estado);
+  return `
+    <div class="pantalla-seguimiento">
+      <div class="numero-seguimiento">Pedido #${p.numero}</div>
+      ${p.codigo ? `
+        <div class="codigo-seguimiento">
+          <span class="codigo-texto">${esc(p.codigo)}</span>
+          <button class="btn-copiar" id="btn-copiar-codigo" onclick="copiarCodigo('${p.codigo}')">Copiar código</button>
+        </div>
+        <p class="ayuda-codigo">Guardá este código: te sirve para volver a ver tu pedido si cerrás la página.</p>
+      ` : ""}
+      ${p.mensajeAdmin ? `<div class="mensaje-del-local"><b>Mensaje del local:</b> ${esc(p.mensajeAdmin)}</div>` : ""}
+      <div class="pasos-seguimiento">
+        ${pasos.map((paso, i) => `
+          <div class="paso-seguimiento ${i < indiceActual ? "hecho" : ""} ${i === indiceActual ? "actual" : ""}">
+            <span class="punto-paso">${i < indiceActual ? "✓" : i + 1}</span>
+            <span class="texto-paso">${paso.label}</span>
+          </div>
+        `).join("")}
+      </div>
+      ${p.estado === "en_camino" ? `<div class="aviso-en-camino">Tu pedido está en camino</div>` : ""}
+      <div class="resumen-seguimiento">
+        ${(p.items || []).map(i => `<div class="fila-item"><span>${formatearCantidad(i.cantidad)} × ${esc(i.nombre)}</span><span>${money(i.precio * i.cantidad)}</span></div>`).join("")}
+        <div class="total-seguimiento"><span>Total</span><span>${money(p.total)}</span></div>
+      </div>
+      <button class="btn-primario" onclick="finalizarSeguimiento()">Hacer otro pedido</button>
+    </div>
+  `;
+}
+
+function renderItemMenu(c, estadoNegocio){
+  const agotado = c.disponible === false;
+  const cerrado = estadoNegocio && !estadoNegocio.abierto;
+  const cant = cantidadEnCarrito(c.id);
+  const paso = c.permiteMedias ? 0.5 : 1;
+  return `
+    <div class="item-comida ${agotado ? "agotado" : ""}">
+      ${c.imagen ? `<img class="foto-comida" src="${c.imagen}" onclick="verImagenAmpliada('${c.id}')" style="cursor:pointer;">` : ""}
+      <div class="info">
+        <h3>${esc(c.nombre)}</h3>
+        ${c.descripcion ? `<p>${esc(c.descripcion)}</p>` : ""}
+        ${agotado ? `<span class="agotado-label">Agotado</span>` : `<span class="precio">${money(c.precio)}</span>`}
+      </div>
+      ${agotado ? "" : cerrado ? `
+        <div class="control-cantidad"><span class="agotado-label">Cerrado</span></div>
+      ` : `
+        <div class="control-cantidad">
+          ${cant === 0
+            ? `<button class="btn-agregar" onclick="agregarAlCarrito('${c.id}')">+</button>`
+            : `<div class="stepper">
+                 <button onclick="cambiarCantidad('${c.id}', -${paso})">–</button>
+                 <span>${formatearCantidad(cant)}</span>
+                 <button onclick="cambiarCantidad('${c.id}', ${paso})">+</button>
+               </div>`
+          }
+        </div>`}
+    </div>
+  `;
+}
+
+function renderHojaCarrito(){
+  return `
+    <div class="fondo-hoja" onclick="if(event.target===this) cerrarCarrito()">
+      <div class="hoja">
+        <div class="hoja-header"><h2>Tu pedido</h2><button class="cerrar" onclick="cerrarCarrito()">×</button></div>
+        ${cart.length === 0 ? `<div class="vacio">Todavía no agregaste nada.</div>` : cart.map(i => `
+          <div class="fila-carrito">
+            <div>
+              <div class="nom">${esc(i.nombre)}</div>
+              <div class="sub">${formatearCantidad(i.cantidad)} × ${money(i.precio)}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="stepper">
+                <button onclick="cambiarCantidad('${i.id}', -${i.permiteMedias ? 0.5 : 1})">–</button>
+                <span>${formatearCantidad(i.cantidad)}</span>
+                <button onclick="cambiarCantidad('${i.id}', ${i.permiteMedias ? 0.5 : 1})">+</button>
+              </div>
+              <button class="quitar" onclick="quitarDelCarrito('${i.id}')">Quitar</button>
+            </div>
+          </div>
+        `).join("")}
+        ${cart.length > 0 ? `
+          <div class="totalizador"><span>Total</span><span>${money(totalCarrito())}</span></div>
+          <button class="btn-primario" onclick="irACheckout()">Continuar</button>
+        ` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderHojaCheckout(){
+  const pagoActual = formCheckout.metodoPago;
+  return `
+    <div class="fondo-hoja" onclick="if(event.target===this) cerrarCheckout()">
+      <div class="hoja">
+        <div class="hoja-header"><h2>Datos del pedido</h2><button class="cerrar" onclick="cerrarCheckout()">×</button></div>
+
+        <div class="campo"><label>Nombre y apellido</label><input id="cli-nombre" placeholder="Tu nombre" value="${esc(formCheckout.nombre)}" oninput="formCheckout.nombre = this.value"></div>
+        <div class="campo"><label>Teléfono</label><input id="cli-telefono" placeholder="Ej: 351 555 5555" type="tel" value="${esc(formCheckout.telefono)}" oninput="formCheckout.telefono = this.value"></div>
+
+        <div class="campo">
+          <label>Entrega</label>
+          <select id="cli-entrega" onchange="formCheckout.tipoEntrega = this.value; render()">
+            <option value="retiro" ${formCheckout.tipoEntrega === "retiro" ? "selected" : ""}>Retiro en el local</option>
+            <option value="envio" ${formCheckout.tipoEntrega === "envio" ? "selected" : ""}>Envío a domicilio</option>
+          </select>
+        </div>
+        ${formCheckout.tipoEntrega === "envio" ? `
+          <div class="campo"><label>Dirección</label><input id="cli-direccion" placeholder="Calle, número, barrio" value="${esc(formCheckout.direccion)}" oninput="formCheckout.direccion = this.value"></div>
+        ` : `
+          <div class="campo">
+            <label>Dirección para retirar</label>
+            <div class="direccion-local">${configNegocio.direccionRetiro ? esc(configNegocio.direccionRetiro) : "El local todavía no cargó la dirección de retiro."}</div>
+          </div>
+        `}
+
+        <div class="campo">
+          <label>Método de pago</label>
+          <div class="opciones-pago">
+            <label><input type="radio" name="pago" value="efectivo" ${pagoActual === "efectivo" ? "checked" : ""} onchange="formCheckout.metodoPago = this.value; render()"><span>Efectivo</span></label>
+            <label><input type="radio" name="pago" value="transferencia" ${pagoActual === "transferencia" ? "checked" : ""} onchange="formCheckout.metodoPago = this.value; render()"><span>Transferencia</span></label>
+            <label><input type="radio" name="pago" value="qr" ${pagoActual === "qr" ? "checked" : ""} onchange="formCheckout.metodoPago = this.value; render()"><span>QR</span></label>
+          </div>
+          ${pagoActual === "transferencia" ? `
+            <div class="datos-transferencia">
+              ${configNegocio.transferenciaAlias ? `<div><b>Alias:</b> ${esc(configNegocio.transferenciaAlias)}</div>` : ""}
+              ${configNegocio.transferenciaCBU ? `<div><b>CBU:</b> ${esc(configNegocio.transferenciaCBU)}</div>` : ""}
+              ${!configNegocio.transferenciaAlias && !configNegocio.transferenciaCBU ? "Datos de transferencia a confirmar." : ""}
+            </div>
+          ` : ""}
+          ${pagoActual === "qr" ? `
+            <div class="datos-transferencia">
+              ${configNegocio.qrTransferencia ? `<img src="${configNegocio.qrTransferencia}" style="max-width:100%; border-radius:6px; display:block;">` : "El local todavía no cargó el código QR."}
+            </div>
+          ` : ""}
+          ${(pagoActual === "transferencia" || pagoActual === "qr") ? `
+            <div class="campo" style="margin-top:10px;">
+              <label>Envíanos tu comprobante de pago Aquí👇</label>
+              <input type="file" accept="image/*" id="cli-comprobante">
+            </div>
+          ` : ""}
+        </div>
+
+        <div class="campo"><label>Notas (opcional)</label><textarea id="cli-notas" placeholder="Aclaraciones sobre el pedido" oninput="formCheckout.notas = this.value">${esc(formCheckout.notas)}</textarea></div>
+
+        ${costoEnvioActual() > 0 ? `
+          <div class="totalizador" style="font-size:13px; color:var(--ink-soft);"><span>Subtotal</span><span>${money(subtotalCarrito())}</span></div>
+          <div class="totalizador" style="font-size:13px; color:var(--ink-soft);"><span>Envío</span><span>${money(costoEnvioActual())}</span></div>
+        ` : ""}
+        <div class="totalizador"><span>Total</span><span>${money(totalCarrito())}</span></div>
+        <button class="btn-primario" id="btn-confirmar-pedido" onclick="confirmarPedido()">Confirmar pedido</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ======================================================================
+   4) LADO ADMINISTRADOR
+   ====================================================================== */
+function irAVistaLogin(v){
+  vistaLogin = v;
+  errorLogin = "";
+  errorRegistro = "";
+  mensajeRecuperar = "";
+  render();
+}
+
+async function iniciarSesion(){
+  const email = document.getElementById("adm-email").value.trim();
+  const password = document.getElementById("adm-password").value;
+  if(!email || !password){ errorLogin = "Completá el email y la contraseña."; render(); return; }
+  errorLogin = ""; cargandoLogin = true; render();
+  try{
+    await auth.signInWithEmailAndPassword(email, password);
+    // onAuthStateChanged detecta el login y lleva sola al panel
+  }catch(e){
+    errorLogin = "Email o contraseña incorrectos.";
+  }
+  cargandoLogin = false;
+  render();
+}
+
+async function registrarRotiseria(){
+  const nombreNegocio = document.getElementById("reg-nombre").value.trim();
+  const email = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+  if(!nombreNegocio || !email || !password){ errorRegistro = "Completá todos los campos."; render(); return; }
+  if(password.length < 6){ errorRegistro = "La contraseña debe tener al menos 6 caracteres."; render(); return; }
+  errorRegistro = ""; cargandoLogin = true; render();
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    await refRotiseria(cred.user.uid).set({
+      nombreNegocio,
+      tagline: "Pedidos online",
+      activo: true,
+      transferenciaAlias: "",
+      transferenciaCBU: "",
+      direccionRetiro: "",
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    // onAuthStateChanged detecta el alta y lleva sola al panel
+  }catch(e){
+    errorRegistro = e.code === "auth/email-already-in-use" ? "Ese email ya está registrado." : "No se pudo registrar. Probá de nuevo.";
+  }
+  cargandoLogin = false;
+  render();
+}
+
+async function enviarRecuperacion(){
+  const email = document.getElementById("rec-email").value.trim();
+  if(!email){ mensajeRecuperar = "Ingresá tu email."; render(); return; }
+  try{
+    await auth.sendPasswordResetEmail(email);
+    mensajeRecuperar = "Te enviamos un mail para recuperar tu contraseña.";
+  }catch(e){
+    mensajeRecuperar = "No pudimos enviarlo. Revisá que el email esté bien escrito.";
+  }
+  render();
+}
+
+function salirAdmin(){
+  actualizarBadge(0);
+  auth.signOut();
+}
+
+function setAdminTab(tab){ adminTab = tab; mostrandoFormComida = false; mostrandoFormGasto = false; render(); }
+
+function suscribirMovimientos(id){
+  if(unsubMovimientos) return;
+  unsubMovimientos = refMovimientos(id).orderBy("fecha", "desc").onSnapshot(snap => {
+    movimientos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
+}
+function desuscribirMovimientos(){
+  if(unsubMovimientos){ unsubMovimientos(); unsubMovimientos = null; }
+}
+function mostrarFormGasto(){ mostrandoFormGasto = true; render(); }
+function ocultarFormGasto(){ mostrandoFormGasto = false; render(); }
+async function guardarGasto(){
+  const descripcion = document.getElementById("g-descripcion").value.trim();
+  const monto = Number(document.getElementById("g-monto").value);
+  const fechaInput = document.getElementById("g-fecha").value;
+  if(!descripcion || !monto){ alert("Completá la descripción y el costo."); return; }
+  const fecha = firebase.firestore.Timestamp.fromDate(new Date(fechaInput + "T12:00:00"));
+  await refMovimientos(rotiseriaAdminId).add({ tipo: "gasto", descripcion, monto, fecha });
+  mostrandoFormGasto = false;
+  render();
+}
+function cambiarFiltroFecha(){
+  filtroFechaDesde = document.getElementById("filtro-desde").value;
+  filtroFechaHasta = document.getElementById("filtro-hasta").value;
+  render();
+}
+function limpiarFiltroFecha(){ filtroFechaDesde = ""; filtroFechaHasta = ""; render(); }
+function toggleFiltroTipoCaja(tipo){
+  filtroTiposCaja[tipo] = !filtroTiposCaja[tipo];
+  if(!filtroTiposCaja.venta && !filtroTiposCaja.gasto) filtroTiposCaja[tipo] = true; // no dejar los dos apagados
+  render();
+}
+function claveFecha(ts){
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toISOString().slice(0, 10);
+}
+function formatoFechaLarga(claveISO){
+  const [y, m, d] = claveISO.split("-").map(Number);
+  const fecha = new Date(y, m - 1, d);
+  const texto = fecha.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+function mostrarFormComida(id){
+  editandoComidaId = id || null;
+  mostrandoFormComida = true;
+  render();
+}
+function ocultarFormComida(){ mostrandoFormComida = false; editandoComidaId = null; render(); }
+
+async function guardarComida(){
+  const nombre = document.getElementById("f-nombre").value.trim();
+  const descripcion = document.getElementById("f-descripcion").value.trim();
+  const precio = Number(document.getElementById("f-precio").value);
+  const categoria = document.getElementById("f-categoria").value.trim() || "Menú";
+  const disponible = document.getElementById("f-disponible").checked;
+  const permiteMedias = document.getElementById("f-medias").checked;
+  const promocionDia = document.getElementById("f-promo").checked;
+
+  if(!nombre || !precio){ alert("Completá al menos el nombre y el precio."); return; }
+
+  const yaEnPromo = comidas.filter(c => c.promocionDia && c.id !== editandoComidaId).length;
+  if(promocionDia && yaEnPromo >= 2){
+    alert("Ya tenés 2 productos en \"Promoción del día\". Sacá uno antes de agregar otro.");
+    return;
+  }
+
+  const boton = document.querySelector('.form-comida .btn-oro');
+  if(boton){ boton.disabled = true; boton.textContent = "Guardando..."; }
+
+  const imagen = await leerImagenComprimida("f-imagen", 500, 0.7);
+  const datos = { nombre, descripcion, precio, categoria, disponible, permiteMedias, promocionDia };
+  if(imagen) datos.imagen = imagen; // solo se pisa la foto si se eligió una nueva
+
+  if(editandoComidaId){
+    await refComidas(rotiseriaAdminId).doc(editandoComidaId).update(datos);
+  } else {
+    await refComidas(rotiseriaAdminId).add(datos);
+  }
+  ocultarFormComida();
+}
+async function eliminarComida(id){
+  if(!confirm("¿Eliminar esta comida del menú?")) return;
+  await refComidas(rotiseriaAdminId).doc(id).delete();
+}
+async function toggleDisponible(id, valorActual){
+  await refComidas(rotiseriaAdminId).doc(id).update({ disponible: !(valorActual !== false) });
+}
+
+function setFiltroPedidos(f){ filtroPedidos = f; render(); }
+async function cambiarEstadoPedido(id, estado){
+  await refPedidos(rotiseriaAdminId).doc(id).update({ estado });
+}
+async function enviarMensajeAdmin(id){
+  const texto = (borradorMensajes[id] || "").trim();
+  await refPedidos(rotiseriaAdminId).doc(id).update({ mensajeAdmin: texto });
+  delete borradorMensajes[id];
+  render();
+}
+function abrirFactura(id){
+  pedidoFactura = pedidos.find(p => p.id === id) || null;
+  render();
+}
+function cerrarFactura(){ pedidoFactura = null; render(); }
+function imprimirFactura(){ window.print(); }
+
+// Arma el número en formato internacional para wa.me (Argentina: 54 9 + número local, sin 0 ni 15).
+function telefonoWhatsApp(telefono){
+  let limpio = (telefono || "").replace(/\D/g, "");
+  limpio = limpio.replace(/^0/, "").replace(/^15/, "");
+  if(!limpio.startsWith("54")) limpio = "54" + limpio;
+  if(!limpio.startsWith("549")) limpio = "549" + limpio.slice(2);
+  return limpio;
+}
+function abrirWhatsApp(telefono, numero, mensajePropio){
+  const tel = telefonoWhatsApp(telefono);
+  const texto = (mensajePropio && mensajePropio.trim())
+    ? mensajePropio.trim()
+    : `Hola! Te escribimos por tu pedido #${numero}.`;
+  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(texto)}`, "_blank");
+}
+
+async function guardarDatosNegocio(){
+  const horarios = {};
+  for(let d = 0; d < 7; d++){
+    horarios[d] = {
+      activo: document.getElementById("dia-activo-" + d).checked,
+      desde: document.getElementById("dia-desde-" + d).value || "09:00",
+      hasta: document.getElementById("dia-hasta-" + d).value || "22:00"
+    };
+  }
+  const datos = {
+    nombreNegocio: document.getElementById("cfg-nombre").value.trim() || "Mi Menú",
+    tagline: document.getElementById("cfg-tagline").value.trim(),
+    telefono: document.getElementById("cfg-telefono").value.trim(),
+    transferenciaAlias: document.getElementById("cfg-alias").value.trim(),
+    transferenciaCBU: document.getElementById("cfg-cbu").value.trim(),
+    direccionRetiro: document.getElementById("cfg-direccion").value.trim(),
+    costoEnvio: Number(document.getElementById("cfg-costo-envio").value) || 0,
+    horarioActivo: document.getElementById("cfg-horario-activo").checked,
+    horarios
+  };
+  await refRotiseria(rotiseriaAdminId).set(datos, { merge: true });
+  alert("Datos guardados.");
+}
+
+function procesarLogo(event){
+  const archivo = event.target.files[0];
+  if(!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function(e){
+    const img = new Image();
+    img.onload = async function(){
+      const maxLado = 200;
+      let ancho = img.width, alto = img.height;
+      if(ancho > alto && ancho > maxLado){ alto = Math.round(alto * (maxLado / ancho)); ancho = maxLado; }
+      else if(alto > maxLado){ ancho = Math.round(ancho * (maxLado / alto)); alto = maxLado; }
+      const canvas = document.createElement("canvas");
+      canvas.width = ancho; canvas.height = alto;
+      canvas.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      await refRotiseria(rotiseriaAdminId).set({ logo: dataUrl }, { merge: true });
+    };
+    img.src = e.target.result;
+  };
+  lector.readAsDataURL(archivo);
+}
+
+function procesarQR(event){
+  const archivo = event.target.files[0];
+  if(!archivo) return;
+  const lector = new FileReader();
+  lector.onload = function(e){
+    const img = new Image();
+    img.onload = async function(){
+      const maxLado = 500;
+      let ancho = img.width, alto = img.height;
+      if(ancho > alto && ancho > maxLado){ alto = Math.round(alto * (maxLado / ancho)); ancho = maxLado; }
+      else if(alto > maxLado){ ancho = Math.round(ancho * (maxLado / alto)); alto = maxLado; }
+      const canvas = document.createElement("canvas");
+      canvas.width = ancho; canvas.height = alto;
+      canvas.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      await refRotiseria(rotiseriaAdminId).set({ qrTransferencia: dataUrl }, { merge: true });
+    };
+    img.src = e.target.result;
+  };
+  lector.readAsDataURL(archivo);
+}
+function quitarQR(){
+  if(!confirm("¿Quitar la imagen del QR?")) return;
+  refRotiseria(rotiseriaAdminId).set({ qrTransferencia: "" }, { merge: true });
+}
+
+function renderAdminLogin(){
+  return `
+    <div class="admin">
+      <div class="admin-login">
+        <div class="tarjeta-login">
+          <h2>Panel de rotiserías</h2>
+          <div class="tabs-login">
+            <button class="${vistaLogin==='login'?'activo':''}" onclick="irAVistaLogin('login')">Iniciar sesión</button>
+            <button class="${vistaLogin==='registro'?'activo':''}" onclick="irAVistaLogin('registro')">Registrar mi rotisería</button>
+          </div>
+
+          ${vistaLogin === 'registro' ? `
+            <div class="campo"><label>Nombre de tu rotisería</label><input id="reg-nombre"></div>
+            <div class="campo"><label>Email</label><input id="reg-email" type="email"></div>
+            <div class="campo"><label>Contraseña</label><input id="reg-password" type="password" onkeydown="if(event.key==='Enter') registrarRotiseria()"></div>
+            ${errorRegistro ? `<div class="error-login">${esc(errorRegistro)}</div>` : ""}
+            <button class="btn-oro" style="width:100%;" ${cargandoLogin?"disabled":""} onclick="registrarRotiseria()">${cargandoLogin ? "Creando..." : "Crear mi rotisería"}</button>
+          ` : vistaLogin === 'recuperar' ? `
+            <p style="font-size:13px; color:var(--ink-soft); margin:0 0 14px;">Ingresá el email con el que te registraste y te mandamos un link para elegir una contraseña nueva.</p>
+            <div class="campo"><label>Email</label><input id="rec-email" type="email" onkeydown="if(event.key==='Enter') enviarRecuperacion()"></div>
+            ${mensajeRecuperar ? `<div class="mensaje-recuperar">${esc(mensajeRecuperar)}</div>` : ""}
+            <button class="btn-oro" style="width:100%;" onclick="enviarRecuperacion()">Enviar link</button>
+            <button class="link-chico" onclick="irAVistaLogin('login')">Volver a iniciar sesión</button>
+          ` : `
+            <div class="campo"><label>Email</label><input id="adm-email" type="email" onkeydown="if(event.key==='Enter') iniciarSesion()"></div>
+            <div class="campo"><label>Contraseña</label><input id="adm-password" type="password" onkeydown="if(event.key==='Enter') iniciarSesion()"></div>
+            ${errorLogin ? `<div class="error-login">${esc(errorLogin)}</div>` : ""}
+            <button class="btn-oro" style="width:100%;" ${cargandoLogin?"disabled":""} onclick="iniciarSesion()">${cargandoLogin ? "Entrando..." : "Entrar"}</button>
+            <button class="link-chico" onclick="irAVistaLogin('recuperar')">¿Olvidaste tu contraseña?</button>
+          `}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdmin(){
+  const pedidosNuevos = pedidos.filter(p => p.estado === "nuevo").length;
+  return `
+    <div class="admin">
+      <div class="admin-header">
+        <h1>${esc(configNegocio.nombreNegocio)} · Admin</h1>
+        <button class="btn-salir" onclick="salirAdmin()">Cerrar sesión</button>
+      </div>
+      <div class="admin-tabs">
+        <button class="${adminTab==='comidas'?'activo':''}" onclick="setAdminTab('comidas')">Comidas</button>
+        <button class="${adminTab==='pedidos'?'activo':''}" onclick="setAdminTab('pedidos')">Pedidos${pedidosNuevos>0?`<span class="insignia">${pedidosNuevos}</span>`:""}</button>
+        <button class="${adminTab==='caja'?'activo':''}" onclick="setAdminTab('caja')">Caja</button>
+        <button class="${adminTab==='datos'?'activo':''}" onclick="setAdminTab('datos')">Datos del negocio</button>
+      </div>
+      <div class="admin-contenido">
+        ${adminTab === "comidas" ? renderAdminComidas() : ""}
+        ${adminTab === "pedidos" ? renderAdminPedidos() : ""}
+        ${adminTab === "caja" ? renderAdminCaja() : ""}
+        ${adminTab === "datos" ? renderAdminDatos() : ""}
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminComidas(){
+  const c = editandoComidaId ? comidas.find(x => x.id === editandoComidaId) : null;
+  return `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span style="font-size:13px; color:#B8AD9E;">${comidas.length} comida(s) cargada(s)</span>
+      ${!mostrandoFormComida ? `<button class="btn-oro" onclick="mostrarFormComida()">+ Agregar comida</button>` : ""}
+    </div>
+    ${mostrandoFormComida ? `
+      <div class="form-comida">
+        <div class="campo"><label>Nombre</label><input id="f-nombre" value="${esc(c?.nombre||"")}"></div>
+        <div class="campo"><label>Descripción</label><textarea id="f-descripcion">${esc(c?.descripcion||"")}</textarea></div>
+        <div class="fila-form">
+          <div class="campo"><label>Precio</label><input id="f-precio" type="number" value="${c?.precio||""}"></div>
+          <div class="campo"><label>Categoría</label><input id="f-categoria" placeholder="Ej: Entradas" value="${esc(c?.categoria||"")}"></div>
+        </div>
+        <div class="campo">
+          <label>Foto (opcional)</label>
+          ${c?.imagen ? `
+            <img src="${c.imagen}" style="width:100px; height:100px; object-fit:cover; border-radius:6px; display:block; margin-bottom:8px;">
+          ` : ""}
+          <input type="file" accept="image/*" id="f-imagen">
+          <div style="font-size:12px; color:#B8AD9E; margin-top:4px;">Dejalo vacío para no cambiar la foto actual.</div>
+        </div>
+        <div class="disponible-switch">
+          <input type="checkbox" id="f-disponible" ${c?.disponible===false?"":"checked"}> Disponible para pedir
+        </div>
+        <div class="disponible-switch">
+          <input type="checkbox" id="f-medias" ${c?.permiteMedias?"checked":""}> Permitir pedir medias unidades (ej: 1½ docena)
+        </div>
+        <div class="disponible-switch">
+          <input type="checkbox" id="f-promo" ${c?.promocionDia?"checked":""}> Mostrar en "Promoción del día" (máx. 2 productos)
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-oro" onclick="guardarComida()">Guardar</button>
+          <button class="btn-secundario-admin" onclick="ocultarFormComida()">Cancelar</button>
+        </div>
+      </div>
+    ` : ""}
+    ${comidas.length === 0 && !mostrandoFormComida ? `<div class="vacio">Agregá tu primera comida para armar el menú.</div>` : ""}
+    ${comidas.map(c => `
+      <div class="fila-comida-admin ${c.disponible===false?'agotado':''}">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          ${c.imagen ? `<img src="${c.imagen}" style="width:40px; height:40px; object-fit:cover; border-radius:6px; flex:0 0 auto;">` : ""}
+          <div style="min-width:0;">
+            <div class="nom">${esc(c.nombre)}${c.promocionDia ? ` <span style="color:var(--gold); font-size:11px; font-weight:700;">★ Promo</span>` : ""}</div>
+            <div class="cat">${esc(c.categoria||"Menú")} · <span class="precio">${money(c.precio)}</span></div>
+          </div>
+        </div>
+        <div class="acciones-comida">
+          <button title="${c.disponible===false?'Marcar disponible':'Marcar agotado'}" onclick="toggleDisponible('${c.id}', ${c.disponible})">${c.disponible===false?'✓':'⦸'}</button>
+          <button title="Editar" onclick="mostrarFormComida('${c.id}')">✎</button>
+          <button title="Eliminar" onclick="eliminarComida('${c.id}')">×</button>
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderAdminPedidos(){
+  const filtros = [
+    { id: "activos", label: "Activos" },
+    { id: "nuevo", label: "Nuevos" },
+    { id: "preparando", label: "En preparación" },
+    { id: "listo", label: "Listos" },
+    { id: "en_camino", label: "En camino" },
+    { id: "entregado", label: "Entregados" },
+    { id: "todos", label: "Todos" }
+  ];
+  let lista = pedidos;
+  if(filtroPedidos === "activos") lista = pedidos.filter(p => p.estado !== "entregado");
+  else if(filtroPedidos !== "todos") lista = pedidos.filter(p => p.estado === filtroPedidos);
+
+  return `
+    <div class="filtros-pedidos">
+      ${filtros.map(f => `<button class="${filtroPedidos===f.id?'activo':''}" onclick="setFiltroPedidos('${f.id}')">${f.label}</button>`).join("")}
+    </div>
+    ${lista.length === 0 ? `<div class="vacio">No hay pedidos para mostrar.</div>` : lista.map(p => renderTarjetaPedido(p)).join("")}
+  `;
+}
+
+function renderTarjetaPedido(p){
+  const hora = p.creado?.toDate ? p.creado.toDate().toLocaleString("es-AR", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit" }) : "";
+  const nombresEstado = { nuevo:"Nuevo", preparando:"En preparación", listo:"Listo", en_camino:"En camino", entregado:"Entregado" };
+  const nombresPago = { efectivo: "Efectivo", transferencia: "Transferencia", qr: "QR" };
+  return `
+    <div class="tarjeta-pedido estado-${p.estado}">
+      <div class="cabecera-pedido">
+        <span class="num">#${p.numero}${p.codigo ? ` <span class="codigo-admin">${esc(p.codigo)}</span>` : ""}</span>
+        <span class="hora">${hora}</span>
+      </div>
+      <div class="detalle-pedido">
+        <b>${esc(p.nombre)}</b> · ${esc(p.telefono)}<br>
+        ${p.tipoEntrega === "envio" ? `Envío${p.costoEnvio ? ` (${money(p.costoEnvio)})` : ""}: ${esc(p.direccion)}` : "Retiro en el local"} · Pago: ${nombresPago[p.metodoPago] || p.metodoPago}
+        ${p.notas ? `<br>Nota: ${esc(p.notas)}` : ""}
+      </div>
+      <div class="items-pedido">
+        ${(p.items||[]).map(i => `<div><span>${formatearCantidad(i.cantidad)} × ${esc(i.nombre)}</span><span>${money(i.precio*i.cantidad)}</span></div>`).join("")}
+      </div>
+      ${p.comprobante ? `<div class="comprobante-pedido"><span class="etiqueta-comprobante">Comprobante:</span><img src="${p.comprobante}"></div>` : ""}
+      <div class="mensaje-admin">
+        <label class="etiqueta-mensaje">Mensaje para el cliente</label>
+        <div class="fila-mensaje-admin">
+          <input type="text" value="${esc(borradorMensajes[p.id] ?? (p.mensajeAdmin || ""))}" placeholder="Ej: Salió el repartidor" oninput="borradorMensajes['${p.id}'] = this.value">
+          <button class="btn-secundario-admin" onclick="enviarMensajeAdmin('${p.id}')">Enviar</button>
+          <button class="btn-whatsapp" onclick="abrirWhatsApp('${esc(p.telefono)}', ${p.numero}, borradorMensajes['${p.id}'] || '')">WhatsApp</button>
+        </div>
+      </div>
+      <div class="pie-pedido">
+        <span class="total-pedido">${money(p.total)}</span>
+        <div class="selector-estado">
+          <button class="btn-secundario-admin" onclick="abrirFactura('${p.id}')">🧾 Ticket</button>
+          <select onchange="cambiarEstadoPedido('${p.id}', this.value)">
+            ${Object.keys(nombresEstado).map(e => `<option value="${e}" ${p.estado===e?"selected":""}>${nombresEstado[e]}</option>`).join("")}
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderHojaFactura(p){
+  const fecha = p.creado?.toDate ? p.creado.toDate().toLocaleString("es-AR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "";
+  const nombresPago = { efectivo: "Efectivo", transferencia: "Transferencia", qr: "QR" };
+  return `
+    <div class="fondo-hoja" onclick="if(event.target===this) cerrarFactura()">
+      <div class="hoja">
+        <div class="hoja-header no-imprimir"><h2>Ticket de pedido</h2><button class="cerrar" onclick="cerrarFactura()">×</button></div>
+
+        <div class="ticket" id="ticket-imprimible">
+          <div class="ticket-header">
+            ${configNegocio.logo ? `<img class="ticket-logo" src="${configNegocio.logo}">` : ""}
+            <div>
+              <div class="ticket-nombre-negocio">${esc(configNegocio.nombreNegocio)}</div>
+              ${configNegocio.direccionRetiro ? `<div>${esc(configNegocio.direccionRetiro)}</div>` : ""}
+              ${configNegocio.telefono ? `<div>Tel: ${esc(configNegocio.telefono)}</div>` : ""}
+            </div>
+          </div>
+
+          <div class="ticket-linea"></div>
+
+          <div class="ticket-bloque">
+            <div><b>Pedido #${p.numero}</b></div>
+            ${p.codigo ? `<div>Código de seguimiento: ${esc(p.codigo)}</div>` : ""}
+            ${fecha ? `<div>${fecha}</div>` : ""}
+          </div>
+
+          <div class="ticket-linea"></div>
+
+          <div class="ticket-bloque">
+            <div><b>${esc(p.nombre)}</b></div>
+            <div>Tel: ${esc(p.telefono)}</div>
+            <div>${p.tipoEntrega === "envio" ? `Envío a domicilio: ${esc(p.direccion)}` : "Retira por el local"}</div>
+            <div>Pago: ${nombresPago[p.metodoPago] || p.metodoPago}</div>
+          </div>
+
+          <div class="ticket-linea"></div>
+
+          <div class="ticket-items">
+            <div class="ticket-fila ticket-encabezado-items"><span>Cant.</span><span>Descripción</span><span>Precio</span></div>
+            ${(p.items||[]).map(i => `
+              <div class="ticket-fila">
+                <span>${formatearCantidad(i.cantidad)}</span>
+                <span>${esc(i.nombre)}</span>
+                <span>${money(i.precio * i.cantidad)}</span>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="ticket-linea"></div>
+          ${p.costoEnvio ? `
+            <div class="ticket-fila"><span>Subtotal</span><span>${money(p.subtotal ?? (p.total - p.costoEnvio))}</span></div>
+            <div class="ticket-fila"><span>Envío</span><span>${money(p.costoEnvio)}</span></div>
+          ` : ""}
+          <div class="ticket-fila ticket-total"><span>TOTAL</span><span>${money(p.total)}</span></div>
+          <div class="ticket-linea"></div>
+
+          <div class="ticket-gracias">Muchas Gracias por su compra</div>
+        </div>
+
+        <div class="acciones-factura no-imprimir">
+          <button class="btn-oro" onclick="imprimirFactura()">Imprimir</button>
+          <button class="btn-secundario-admin" onclick="cerrarFactura()">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminCaja(){
+  const desde = filtroFechaDesde ? new Date(filtroFechaDesde + "T00:00:00") : null;
+  const hasta = filtroFechaHasta ? new Date(filtroFechaHasta + "T23:59:59") : null;
+  const filtrados = movimientos.filter(m => {
+    if(!filtroTiposCaja[m.tipo]) return false;
+    const f = m.fecha?.toDate ? m.fecha.toDate() : new Date(m.fecha);
+    if(desde && f < desde) return false;
+    if(hasta && f > hasta) return false;
+    return true;
+  });
+  const totalVentas = filtrados.filter(m => m.tipo === "venta").reduce((t, m) => t + m.monto, 0);
+  const totalGastos = filtrados.filter(m => m.tipo === "gasto").reduce((t, m) => t + m.monto, 0);
+  const neto = totalVentas - totalGastos;
+  const soloUnTipo = filtroTiposCaja.venta !== filtroTiposCaja.gasto;
+
+  const porDia = {};
+  filtrados.forEach(m => { (porDia[claveFecha(m.fecha)] ??= []).push(m); });
+  const dias = Object.keys(porDia).sort((a, b) => b.localeCompare(a));
+
+  return `
+    <div class="filtro-fechas">
+      <div class="campo"><label>Desde</label><input type="date" id="filtro-desde" value="${filtroFechaDesde}" onchange="cambiarFiltroFecha()"></div>
+      <div class="campo"><label>Hasta</label><input type="date" id="filtro-hasta" value="${filtroFechaHasta}" onchange="cambiarFiltroFecha()"></div>
+      ${(filtroFechaDesde || filtroFechaHasta) ? `<button class="btn-secundario-admin" onclick="limpiarFiltroFecha()">Ver todo</button>` : ""}
+    </div>
+
+    <div class="filtro-tipos-caja">
+      <label><input type="checkbox" ${filtroTiposCaja.venta ? "checked" : ""} onchange="toggleFiltroTipoCaja('venta')"> Ventas</label>
+      <label><input type="checkbox" ${filtroTiposCaja.gasto ? "checked" : ""} onchange="toggleFiltroTipoCaja('gasto')"> Gastos</label>
+    </div>
+
+    <div class="resumen-caja">
+      ${filtroTiposCaja.venta ? `<div class="fila-resumen"><span>Ventas</span><span class="monto-venta">${money(totalVentas)}</span></div>` : ""}
+      ${filtroTiposCaja.gasto ? `<div class="fila-resumen"><span>Gastos</span><span class="monto-gasto">${money(totalGastos)}</span></div>` : ""}
+      <div class="fila-resumen total"><span>${soloUnTipo ? (filtroTiposCaja.venta ? "Total a rendir (ventas)" : "Total gastado") : "Total"}</span><span class="${neto >= 0 ? "positivo" : "negativo"}">${neto >= 0 ? "+" : "−"}${money(Math.abs(neto))}</span></div>
+    </div>
+
+    ${!mostrandoFormGasto ? `<button class="btn-oro" onclick="mostrarFormGasto()">+ Agregar gasto / materia prima</button>` : `
+      <div class="form-comida">
+        <div class="campo"><label>Descripción</label><input id="g-descripcion" placeholder="Ej: Harina, queso, caja de pollo"></div>
+        <div class="campo"><label>Costo</label><input id="g-monto" type="number"></div>
+        <div class="campo"><label>Fecha</label><input id="g-fecha" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-oro" onclick="guardarGasto()">Guardar</button>
+          <button class="btn-secundario-admin" onclick="ocultarFormGasto()">Cancelar</button>
+        </div>
+      </div>
+    `}
+
+    ${dias.length === 0 ? `<div class="vacio">No hay movimientos para mostrar.</div>` : dias.map(clave => {
+      const items = porDia[clave];
+      const subtotal = items.reduce((t, m) => t + (m.tipo === "venta" ? m.monto : -m.monto), 0);
+      return `
+        <div class="grupo-dia">
+          <div class="cabecera-dia">
+            <span>${formatoFechaLarga(clave)}</span>
+            <span class="${subtotal >= 0 ? "positivo" : "negativo"}">${subtotal >= 0 ? "+" : "−"}${money(Math.abs(subtotal))}</span>
+          </div>
+          ${items.map(m => `
+            <div class="fila-movimiento">
+              <span>${esc(m.descripcion)}</span>
+              <span class="${m.tipo === "venta" ? "positivo" : "negativo"}">${m.tipo === "venta" ? "+" : "−"}${money(m.monto)}</span>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }).join("")}
+  `;
+}
+
+function renderAdminDatos(){
+  return `
+    <div class="campo">
+      <label>Logo (se muestra redondo en la portada)</label>
+      ${configNegocio.logo ? `<img src="${configNegocio.logo}" style="width:64px; height:64px; object-fit:cover; border-radius:50%; display:block; margin-bottom:8px;">` : ""}
+      <input type="file" accept="image/*" id="cfg-logo-input" onchange="procesarLogo(event)">
+    </div>
+    <div class="campo"><label>Nombre del negocio</label><input id="cfg-nombre" value="${esc(configNegocio.nombreNegocio)}"></div>
+    <div class="campo"><label>Teléfono</label><input id="cfg-telefono" value="${esc(configNegocio.telefono||"")}"></div>
+    <div class="campo"><label>Frase debajo del nombre</label><input id="cfg-tagline" value="${esc(configNegocio.tagline)}"></div>
+    <div class="campo"><label>Alias para transferencias</label><input id="cfg-alias" value="${esc(configNegocio.transferenciaAlias)}"></div>
+    <div class="campo"><label>CBU (opcional)</label><input id="cfg-cbu" value="${esc(configNegocio.transferenciaCBU)}"></div>
+    <div class="campo"><label>Dirección del local (para retiro)</label><input id="cfg-direccion" value="${esc(configNegocio.direccionRetiro)}"></div>
+    <div class="campo"><label>Costo de envío a domicilio</label><input id="cfg-costo-envio" type="number" min="0" value="${configNegocio.costoEnvio || 0}"></div>
+    <div class="campo">
+      <label>QR para transferencias</label>
+      ${configNegocio.qrTransferencia ? `
+        <img src="${configNegocio.qrTransferencia}" style="max-width:180px; display:block; margin-bottom:8px; border-radius:6px;">
+        <button class="btn-secundario-admin" onclick="quitarQR()">Quitar QR</button>
+      ` : `<div style="color:#B8AD9E; font-size:13px; margin-bottom:8px;">Todavía no subiste una foto de tu QR.</div>`}
+      <input type="file" accept="image/*" id="cfg-qr-input" onchange="procesarQR(event)" style="margin-top:8px;">
+    </div>
+
+    <div class="campo">
+      <label>Horario de atención</label>
+      <label style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:#D9CFC0; margin:6px 0 10px; cursor:pointer;">
+        <input type="checkbox" id="cfg-horario-activo" ${configNegocio.horarioActivo ? "checked" : ""}> Restringir pedidos según el horario
+      </label>
+      <div style="font-size:13px; color:#B8AD9E; margin-bottom:10px;">
+        Fuera de este horario, el cliente ve el menú pero no puede confirmar pedidos.
+      </div>
+      ${configNegocio.horarioActivo ? (() => {
+        const estado = estadoNegocioAhora();
+        return `<div style="font-size:13px; font-weight:700; margin-bottom:10px; color:${estado.abierto ? "var(--exito)" : "var(--alerta-texto)"};">Ahora mismo: ${estado.abierto ? (estado.cierraPronto ? "Abierto (cierra pronto)" : "Abierto") : "Cerrado"}</div>`;
+      })() : ""}
+      ${diasSemana.map((nombre, idx) => {
+        const d = (configNegocio.horarios && configNegocio.horarios[idx]) || { activo: true, desde: "09:00", hasta: "22:00" };
+        return `
+          <div class="fila-horario">
+            <label class="fila-horario-dia">
+              <input type="checkbox" id="dia-activo-${idx}" ${d.activo ? "checked" : ""}> ${nombre}
+            </label>
+            <input type="time" id="dia-desde-${idx}" value="${d.desde}">
+            <span>a</span>
+            <input type="time" id="dia-hasta-${idx}" value="${d.hasta}">
+          </div>
+        `;
+      }).join("")}
+    </div>
+
+    <button class="btn-oro" onclick="guardarDatosNegocio()">Guardar datos</button>
+
+    <div class="campo" style="margin-top:24px; border-top:1px solid rgba(255,255,255,0.08); padding-top:18px;">
+      <label>Avisos de pedidos nuevos</label>
+      <div style="font-size:13px; color:#B8AD9E; margin-bottom:10px;">
+        Activá esto para que suene y te avise cuando llegue un pedido nuevo.
+      </div>
+      ${!("Notification" in window)
+        ? `<div style="font-size:13px; color:#B8AD9E;">Este navegador no soporta notificaciones.</div>`
+        : Notification.permission === "granted"
+          ? `<div style="font-size:13px; color:var(--exito);">Notificaciones activadas en este dispositivo.</div>`
+          : Notification.permission === "denied"
+            ? `<div style="font-size:13px; color:var(--alerta-texto);">Las bloqueaste para este sitio. Para activarlas, tocá el candado/ícono de información junto a la URL del navegador y permitilas ahí.</div>`
+            : `<button class="btn-oro" onclick="pedirPermisoNotificaciones()">Activar avisos de pedidos nuevos</button>`
+      }
+    </div>
+  `;
+}
+
+/* ======================================================================
+   5) PANTALLA DE INSTALACIÓN (se muestra si falta configurar Firebase)
+   ====================================================================== */
+function renderSetup(){
+  return `
+    <div class="setup">
+      <h1>Falta un paso para activar la app</h1>
+      <p>Este archivo necesita un proyecto de Firebase gratuito para guardar el menú y los pedidos.</p>
+      <ol>
+        <li>Entrá a <code>console.firebase.google.com</code> y creá un proyecto nuevo.</li>
+        <li>Dentro del proyecto, andá a <b>Firestore Database</b> → crear base de datos → modo producción.</li>
+        <li>Andá a <b>Authentication</b> → pestaña "Sign-in method" → activá el proveedor <b>Email/contraseña</b> (esto permite que cada rotisería se registre y recupere su contraseña).</li>
+        <li>En <b>Reglas</b> de Firestore, pegá esto (cada rotisería solo puede editar sus propios datos; el menú y las promociones se pueden leer libremente):</li>
+      </ol>
+      <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /rotiserias/{rid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == rid;
+
+      match /comidas/{doc} {
+        allow read: if true;
+        allow write: if request.auth != null && request.auth.uid == rid;
+      }
+      match /pedidos/{doc} {
+        allow read, create: if true;
+        allow update, delete: if request.auth != null && request.auth.uid == rid;
+      }
+      match /movimientos/{doc} {
+        allow read, write: if request.auth != null && request.auth.uid == rid;
+      }
+    }
+  }
+}</pre>
+      <ol start="5">
+        <li>Andá a ⚙ <b>Configuración del proyecto</b> → bajá hasta "Tus apps" → creá una app web → copiá el objeto <code>firebaseConfig</code>.</li>
+        <li>Abrí este archivo con un editor de texto y pegá esos datos donde dice <code>firebaseConfig</code>, cerca del principio del archivo.</li>
+        <li>Guardá el archivo y volvé a abrirlo. Cada rotisería se da de alta sola desde <code>#admin</code> → "Registrar mi rotisería".</li>
+      </ol>
+    </div>
+  `;
+}
+
+/* ======================================================================
+   6) RENDER PRINCIPAL
+   ====================================================================== */
+function render(){
+  if(SIN_CONFIGURAR){
+    document.getElementById("app").innerHTML = renderSetup();
+    return;
+  }
+  let html;
+  if(vista === "home") html = renderHome();
+  else if(vista === "cliente") html = renderCliente();
+  else if(vista === "admin-login") html = renderAdminLogin();
+  else html = renderAdmin();
+  if(mostrarGracias) html += renderCartelGracias();
+  if(pedidoFactura) html += renderHojaFactura(pedidoFactura);
+  document.getElementById("app").innerHTML = html;
+  if(vista === "home") engancharCarruselHome();
+}
+
+function renderCartelGracias(){
+  return `
+    <div class="cartel-gracias">
+      <div class="tarjeta-gracias">
+        <svg class="check-animado" viewBox="0 0 52 52">
+          <circle class="circulo-check" cx="26" cy="26" r="23" fill="none"/>
+          <path class="trazo-check" fill="none" d="M14 27l7 7 16-16"/>
+        </svg>
+        <p class="texto-gracias">¡Gracias por tu pedido!</p>
+      </div>
+    </div>
+  `;
+}
+
+
+// RotiYa: interacción suave del carrusel con mouse/pointer en escritorio.
+// En celular el desplazamiento queda a cargo del scroll táctil nativo.
+(function(){
+  function activarArrastreRotiserias(){
+    const cont = document.getElementById("fila-rotiserias");
+    if(!cont || cont.dataset.dragReady) return;
+    cont.dataset.dragReady = "1";
+    let down = false, startX = 0, startScroll = 0;
+    cont.addEventListener("pointerdown", e => {
+      if(e.pointerType === "touch") return;
+      down = true; startX = e.clientX; startScroll = cont.scrollLeft;
+      cont.setPointerCapture?.(e.pointerId);
+    });
+    cont.addEventListener("pointermove", e => {
+      if(!down) return;
+      cont.scrollLeft = startScroll - (e.clientX - startX);
+    });
+    const stop = () => { down = false; };
+    cont.addEventListener("pointerup", stop);
+    cont.addEventListener("pointercancel", stop);
+  }
+  const oldRender = window.render;
+  window.render = function(){
+    oldRender();
+    if(typeof activarArrastreRotiserias === "function") activarArrastreRotiserias();
+  };
+})();
+
+render();
+
+// PWA: registra el service worker para que la app se pueda instalar y abra sin conexión.
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
