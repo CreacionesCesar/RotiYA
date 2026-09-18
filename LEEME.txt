@@ -1,0 +1,1 @@
+RotiYa — versión visual ajustada al formato de referencia. Mantiene el index.html funcional original y sus rutas/Firebase. Assets requeridos en /assets/.
