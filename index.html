@@ -992,6 +992,90 @@ body{margin:0;}
 .admin-product-price{font-size:22px;margin-top:5px;}
 @media(max-width:1000px){.admin-sidebar{width:220px;flex-basis:220px}.admin-content-grid{grid-template-columns:1fr}.admin-products-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:760px){.admin-sidebar{display:none}.admin-mobile-menu{display:block}.admin-page{padding:18px 14px}.admin-products-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.admin-stats{grid-template-columns:1fr}.admin-topbar{padding:0 12px}.admin-global-search{max-width:none}}
+
+/* ===== RotiYa 3D CLIENTE — capa visual final ===== */
+.portada-rotiya{
+  background:radial-gradient(circle at 50% 12%,#242424 0,#0b0b0b 32%,#050505 72%);
+  perspective:1400px;
+  overflow-x:hidden;
+}
+.portada-rotiya .cliente-topbar{
+  height:126px;
+  background:linear-gradient(180deg,#151515 0%,#050505 100%);
+  border-bottom:1px solid #292929;
+  box-shadow:0 10px 28px rgba(0,0,0,.65), inset 0 -1px rgba(255,255,255,.04);
+  position:relative;
+  z-index:5;
+}
+.portada-rotiya .cliente-logo img{
+  transform:translateZ(28px);
+  filter:drop-shadow(0 7px 0 rgba(0,0,0,.55)) drop-shadow(0 13px 18px rgba(0,0,0,.7));
+}
+.portada-rotiya .cliente-search{
+  transform:translateZ(18px);
+  position:relative;
+  z-index:4;
+}
+.portada-rotiya .cliente-search input{
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.08),0 8px 0 #c7c7cd,0 12px 24px rgba(0,0,0,.45);
+  border:1px solid #fff;
+}
+.portada-rotiya .cliente-hero{
+  position:relative;
+  transform:rotateX(1deg) translateZ(10px);
+  border:2px solid #fff!important;
+  box-shadow:0 12px 0 #111,0 20px 30px rgba(0,0,0,.7),inset 0 0 0 2px rgba(255,255,255,.08);
+}
+.portada-rotiya .cliente-hero img{filter:saturate(1.08) contrast(1.03);}
+.portada-rotiya .rotiserias-seccion{position:relative;z-index:3;}
+.portada-rotiya .rotiseria-avatar{
+  position:relative;
+  border:2px solid #fff;
+  box-shadow:0 10px 0 #bdb9b1,0 16px 24px rgba(0,0,0,.72),inset 0 1px 0 #fff;
+  transform:rotateX(2deg) translateZ(8px);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.portada-rotiya .rotiseria-avatar::after{
+  content:"";position:absolute;left:7px;right:7px;bottom:-12px;height:15px;border-radius:0 0 18px 18px;
+  background:linear-gradient(#d7d2ca,#8e0b10);z-index:-1;
+  box-shadow:0 7px 12px rgba(0,0,0,.55);
+}
+.portada-rotiya .rotiseria-avatar:active{transform:translateY(4px) rotateX(1deg);box-shadow:0 5px 0 #bdb9b1,0 10px 16px rgba(0,0,0,.65);}
+.portada-rotiya .rotiseria-avatar img,.portada-rotiya .rotiseria-avatar .sin-logo{
+  box-shadow:0 5px 0 #b8b5af,0 9px 14px rgba(0,0,0,.42),inset 0 2px 5px rgba(255,255,255,.7);
+}
+.portada-rotiya .cliente-ofertas-title{
+  position:relative;
+  transform:translateZ(10px);
+  box-shadow:0 10px 0 #4e0707,0 18px 30px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,255,255,.08),inset 0 -2px 0 rgba(0,0,0,.5);
+}
+.portada-rotiya .cliente-ofertas-title h2{filter:drop-shadow(0 6px 0 rgba(0,0,0,.55));}
+.portada-rotiya .cliente-promos{perspective:1000px;}
+.portada-rotiya .cliente-promos .tarjeta-promo{
+  position:relative;
+  border:2px solid #fff;
+  transform:rotateX(2deg) rotateZ(-1.5deg) translateZ(12px);
+  box-shadow:0 15px 0 #7c080d,0 21px 0 #390407,0 30px 32px rgba(0,0,0,.72),inset 0 1px 0 #fff;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.portada-rotiya .cliente-promos .tarjeta-promo:nth-child(even){transform:rotateX(2deg) rotateZ(1.5deg) translateZ(12px);}
+.portada-rotiya .cliente-promos .tarjeta-promo::after{
+  content:"";position:absolute;left:6px;right:6px;bottom:-17px;height:19px;border-radius:0 0 20px 20px;
+  background:linear-gradient(#b30d15,#5a0508);z-index:-1;
+}
+.portada-rotiya .cliente-promos .promo-foto{
+  border:2px solid #fff;
+  box-shadow:0 9px 0 #bcb6aa,0 15px 18px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.6);
+}
+.portada-rotiya .cliente-promos .precio{
+  box-shadow:0 6px 0 #970912,0 10px 14px rgba(0,0,0,.45);
+}
+@media(max-width:700px){
+  .portada-rotiya .cliente-topbar{height:126px;}
+  .portada-rotiya .cliente-hero{height:158px!important;min-height:158px!important;}
+  .portada-rotiya .cliente-promos .tarjeta-promo{box-shadow:0 12px 0 #7c080d,0 18px 0 #390407,0 25px 28px rgba(0,0,0,.72),inset 0 1px 0 #fff;}
+}
+
 </style>
 </head>
 <body>
@@ -1628,7 +1712,7 @@ function renderHome(){
   return `
     <div class="portada portada-rotiya">
       <header class="cliente-topbar">
-        <div class="cliente-logo"><img src="assets/logo.png" alt="RotiYa"></div>
+        <div class="cliente-logo"><img src="logo.png" alt="RotiYa"></div>
       </header>
       <div class="buscador-global cliente-search">
         <input type="text" placeholder="Buscar productos, comidas o categorías..." value="${esc(busquedaGlobal)}" oninput="cambiarBusquedaGlobal(this.value)">
@@ -1646,7 +1730,7 @@ function renderHome(){
         : `<div class="sin-resultados">${comidasGlobalesCargando ? "Buscando..." : "No encontramos nada con eso."}</div>`
       ) : `
         <section class="banner-hero cliente-hero">
-          <img src="assets/hero-banner.jpg" alt="El sabor casero en tu mesa">
+          <img src="banner-héroe.jpg" alt="El sabor casero en tu mesa">
         </section>
 
         ${rotiseriasHome.length === 0 ? `<div class="vacio cliente-vacio">Todavía no hay rotiserías disponibles.</div>` : `
@@ -2224,7 +2308,7 @@ function renderAdmin(){
   return `
   <div class="admin-shell">
     <aside class="admin-sidebar">
-      <div class="admin-brand"><img src="assets/logo.png" alt="RotiYa" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="admin-brand-fallback" style="display:none">Roti<span>Ya</span></div></div>
+      <div class="admin-brand"><img src="logo.png" alt="RotiYa" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="admin-brand-fallback" style="display:none">Roti<span>Ya</span></div></div>
       <nav class="admin-nav">
         ${nav.map(([tab,ico,label])=>`<button class="${adminTab===tab?'activo':''}" onclick="setAdminTab('${tab}')"><span class="ico">${ico}</span><span>${label}</span>${tab==='pedidos'&&pedidos.filter(p=>p.estado==='nuevo').length?`<b class="insignia">${pedidos.filter(p=>p.estado==='nuevo').length}</b>`:''}</button>`).join('')}
       </nav>

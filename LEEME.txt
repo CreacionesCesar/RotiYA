@@ -1,0 +1,1 @@
+RotiYa: reemplazar index.html y sw.js. Los assets se sirven desde la raíz del repositorio GitHub Pages.
