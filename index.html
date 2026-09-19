@@ -920,6 +920,78 @@
 
   /* Carrusel de rotiserías: sin flechas, conserva el desplazamiento táctil. */
   .fila-rotiserias-wrap .flecha-carrusel{display:none !important;}
+
+/* ==========================================================
+   RotiYa — paneles finales según las referencias entregadas
+   Cliente y Administrador son interfaces reales y separadas.
+   ========================================================== */
+body{margin:0;}
+/* CLIENTE */
+.portada-rotiya{max-width:none!important;width:100%;min-height:100vh;background:#080808;color:#fff;padding:0 0 44px;}
+.cliente-topbar{height:126px;background:#080808;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #1f1f1f;}
+.cliente-logo img{height:104px;width:auto;max-width:330px;object-fit:contain;display:block;filter:drop-shadow(0 5px 9px rgba(0,0,0,.5));}
+.cliente-search{margin:16px auto 12px;max-width:960px;padding:0 20px;box-sizing:border-box;}
+.cliente-search input{height:48px;box-sizing:border-box;background:#eeeef2;border:0;border-radius:28px;color:#222;font-size:17px;padding:0 22px 0 50px;box-shadow:none;}
+.cliente-search:before{left:38px;color:#68717e;font-size:20px;}
+.cliente-hero{margin:0 auto 16px!important;max-width:960px;height:205px!important;min-height:205px!important;padding:0!important;border-radius:22px!important;background:#151515!important;overflow:hidden;}
+.cliente-hero img{display:block;width:100%;height:100%;object-fit:cover;}
+.rotiserias-seccion{max-width:960px;margin:0 auto 14px;}
+.rotiserias-seccion .fila-rotiserias-wrap{margin:0;padding:0 10px;}
+.fila-rotiserias{gap:16px;padding:4px 6px 12px;justify-content:flex-start;}
+.rotiseria-avatar{width:178px;min-width:178px;height:174px;background:#f4f4f1;border-radius:23px;padding:15px 10px 11px;box-sizing:border-box;box-shadow:0 9px 18px rgba(0,0,0,.48);gap:9px;}
+.rotiseria-avatar img,.rotiseria-avatar .sin-logo{width:96px;height:96px;border-radius:50%;border:0;object-fit:cover;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+.rotiseria-avatar span{font-size:15px;color:#171717;font-weight:700;line-height:1.15;}
+.rotiseria-avatar .etiqueta-cerrada{font-size:10px;color:#fff;background:#c81018;padding:3px 8px;border-radius:20px;}
+.cliente-ofertas-title{max-width:100%;margin:0!important;height:112px;padding:0 12px!important;background:linear-gradient(90deg,#130b08,#3b0907 50%,#130b08)!important;display:flex!important;align-items:center;justify-content:center;border-top:1px solid #5a150f;border-bottom:1px solid #5a150f;overflow:hidden;}
+.cliente-ofertas-title h2{font-family:var(--font-display);font-style:italic;font-weight:900;font-size:52px;letter-spacing:1px;margin:0;color:#fff;text-shadow:0 4px 0 #8c0d0d,0 7px 12px rgba(0,0,0,.7);}
+.cliente-ofertas-title h2 span{color:#ffd119;text-shadow:0 4px 0 #a50d0d,0 6px 10px rgba(0,0,0,.7);}
+.cliente-promos{max-width:960px;margin:0 auto;padding:28px 20px 10px;gap:28px 24px;}
+.cliente-promos .tarjeta-promo{min-height:250px;background:#f7f3ea;border-radius:23px;padding:0 0 12px;box-shadow:0 15px 0 #760a0a,0 20px 28px rgba(0,0,0,.55);overflow:visible;transform:rotate(-1deg);}
+.cliente-promos .tarjeta-promo:nth-child(even){transform:rotate(1deg);}
+.cliente-promos .promo-foto{width:calc(100% - 12px);margin:6px auto 0;aspect-ratio:1.22;object-fit:cover;border-radius:20px;box-shadow:0 8px 12px rgba(0,0,0,.42);transform:none!important;}
+.cliente-promos .promo-nombre{position:relative;left:auto;bottom:auto;display:block;margin:10px 12px 0;background:transparent;padding:0;box-shadow:none;border-radius:0;max-width:65%;font-family:var(--font-body);font-size:20px;line-height:1.05;font-weight:900;color:#121212;}
+.cliente-promos .precio{right:12px;bottom:9px;padding:9px 18px;font-size:23px;border-radius:4px;background:#e31420;clip-path:polygon(2% 20%,8% 9%,17% 14%,25% 4%,35% 11%,45% 3%,55% 11%,66% 5%,76% 15%,87% 8%,97% 21%,94% 34%,100% 48%,94% 62%,98% 77%,88% 88%,78% 83%,67% 97%,56% 89%,45% 98%,34% 89%,23% 96%,14% 85%,4% 89%,7% 73%,0 60%,6% 47%,1% 33%);transform:rotate(-2deg);}
+.cliente-vacio{color:#fff;text-align:center;padding:28px;}
+.cliente-resultados{max-width:960px;margin-left:auto;margin-right:auto;}
+@media(max-width:700px){
+  .cliente-topbar{height:126px;}
+  .cliente-logo img{height:100px;max-width:290px;}
+  .cliente-search{padding:0 16px;margin-top:14px;}
+  .cliente-search input{font-size:15px;height:48px;}
+  .cliente-hero{margin-left:16px!important;margin-right:16px!important;height:158px!important;min-height:158px!important;border-radius:20px!important;}
+  .rotiserias-seccion{margin-bottom:8px;}
+  .fila-rotiserias{padding-left:16px;padding-right:16px;gap:14px;}
+  .rotiseria-avatar{width:180px;min-width:180px;height:174px;}
+  .cliente-ofertas-title{height:88px;}
+  .cliente-ofertas-title h2{font-size:32px;}
+  .cliente-promos{padding:24px 14px 16px;gap:24px 14px;}
+  .cliente-promos .tarjeta-promo{min-height:225px;box-shadow:0 11px 0 #760a0a,0 15px 22px rgba(0,0,0,.5);}
+  .cliente-promos .promo-nombre{font-size:17px;margin-top:8px;}
+  .cliente-promos .precio{font-size:18px;padding:8px 13px;right:8px;bottom:8px;}
+}
+/* ADMIN — ajuste fino a la referencia desktop */
+.admin-shell{font-family:var(--font-body);}
+.admin-sidebar{width:258px;flex-basis:258px;padding:16px 12px 22px;background:#0b1117;}
+.admin-brand{height:104px;margin-bottom:16px;}
+.admin-brand img{max-width:215px;max-height:95px;}
+.admin-nav{gap:6px;}
+.admin-nav button{height:49px;border-radius:8px;padding:0 15px;font-size:16px;}
+.admin-nav button.activo{background:#f51a2e;}
+.admin-main{background:#f4f7fa;}
+.admin-topbar{height:70px;padding:0 24px;}
+.admin-page{max-width:none;padding:28px 24px 30px;}
+.admin-page-head h1{font-size:31px;}
+.admin-stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+.admin-content-grid{grid-template-columns:minmax(0,1fr) 390px;gap:20px;}
+.admin-filter-row{margin-bottom:18px;}
+.admin-products-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;}
+.admin-product{border-radius:16px;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.08);}
+.admin-product-img{height:140px;}
+.admin-product-body{padding:12px 14px 14px;}
+.admin-product-name{font-size:16px;font-weight:800;}
+.admin-product-price{font-size:22px;margin-top:5px;}
+@media(max-width:1000px){.admin-sidebar{width:220px;flex-basis:220px}.admin-content-grid{grid-template-columns:1fr}.admin-products-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
+@media(max-width:760px){.admin-sidebar{display:none}.admin-mobile-menu{display:block}.admin-page{padding:18px 14px}.admin-products-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.admin-stats{grid-template-columns:1fr}.admin-topbar{padding:0 12px}.admin-global-search{max-width:none}}
 </style>
 </head>
 <body>
@@ -1554,69 +1626,61 @@ function renderHome(){
     ? comidasGlobales.filter(c => (c.nombre || "").toLowerCase().includes(busquedaGlobal.trim().toLowerCase()) || (c.categoria || "").toLowerCase().includes(busquedaGlobal.trim().toLowerCase()))
     : [];
   return `
-    <div class="portada">
-      <div class="franja-marca"><img src="icon-192.png" alt="RotiYa"></div>
-
-      <div class="buscador-global">
+    <div class="portada portada-rotiya">
+      <header class="cliente-topbar">
+        <div class="cliente-logo"><img src="assets/logo.png" alt="RotiYa"></div>
+      </header>
+      <div class="buscador-global cliente-search">
         <input type="text" placeholder="Buscar productos, comidas o categorías..." value="${esc(busquedaGlobal)}" oninput="cambiarBusquedaGlobal(this.value)">
       </div>
       ${busquedaGlobal.trim() ? (
         resultados.length > 0 ? `
-          <div class="resultados-busqueda">
+          <div class="resultados-busqueda cliente-resultados">
             ${resultados.slice(0, 12).map(c => `
               <div class="resultado-item" onclick="abrirRotiseria('${c.rotiseriaId}')">
-                ${c.imagen ? `<img src="${c.imagen}">` : `<div style="width:40px; height:40px; border-radius:8px; background:var(--bg); flex:0 0 auto;"></div>`}
-                <div class="info">
-                  <div class="nom">${esc(c.nombre)}</div>
-                  <div class="neg">${esc(c.rotiseriaNombre)}</div>
-                </div>
+                ${c.imagen ? `<img src="${c.imagen}">` : `<div style="width:40px;height:40px;border-radius:8px;background:#ddd;flex:0 0 auto;"></div>`}
+                <div class="info"><div class="nom">${esc(c.nombre)}</div><div class="neg">${esc(c.rotiseriaNombre)}</div></div>
                 <div class="precio">${money(c.precio)}</div>
-              </div>
-            `).join("")}
-          </div>
-        ` : `<div class="sin-resultados">${comidasGlobalesCargando ? "Buscando..." : "No encontramos nada con eso."}</div>`
+              </div>`).join("")}
+          </div>`
+        : `<div class="sin-resultados">${comidasGlobalesCargando ? "Buscando..." : "No encontramos nada con eso."}</div>`
       ) : `
+        <section class="banner-hero cliente-hero">
+          <img src="assets/hero-banner.jpg" alt="El sabor casero en tu mesa">
+        </section>
 
-      <div class="banner-hero">
-        <p class="linea1">El sabor casero</p>
-        <p class="linea2">en tu mesa</p>
-        <p class="linea3">ROTISERÍA · COMIDAS · ENSALADAS</p>
-      </div>
-
-      ${rotiseriasHome.length === 0 ? `<div class="vacio" style="margin:20px;">Todavía no hay rotiserías disponibles.</div>` : `
-        <div class="fila-rotiserias-wrap">
-          <button class="flecha-carrusel" onclick="moverCarrusel(-1)">‹</button>
-          <div class="fila-rotiserias" id="fila-rotiserias">
-            ${rotiseriasHome.map(r => {
-              const estado = estadoNegocioAhora(r);
-              return `
-              <button class="rotiseria-avatar ${!estado.abierto ? "rotiseria-cerrada" : ""}" onclick="abrirRotiseria('${r.id}')">
-                ${r.logo ? `<img src="${r.logo}">` : `<div class="sin-logo">${esc(inicialesNombre(r.nombreNegocio))}</div>`}
-                <span>${esc(r.nombreNegocio || "Rotisería")}</span>
-                ${!estado.abierto ? `<span class="etiqueta-cerrada">Cerrado</span>` : ""}
-              </button>
-            `;
-            }).join("")}
-          </div>
-          <button class="flecha-carrusel" onclick="moverCarrusel(1)">›</button>
-        </div>
-        <div class="dots-rotiserias" id="dots-rotiserias"></div>
-      `}
-      ${promoBoard.length > 0 ? `
-        <div class="banda-ofertas"><h2>🔥 Ofertas <b>del día</b></h2></div>
-        <div class="grilla-promos">
-          ${promoBoard.map(p => `
-            <div class="tarjeta-promo" onclick="abrirRotiseria('${p.rotiseriaId}')">
-              ${p.imagen ? `<img class="promo-foto" src="${p.imagen}">` : `<div class="promo-foto"></div>`}
-              <div class="promo-nombre">${esc(p.nombre)}</div>
-              <span class="precio">${money(p.precio)}</span>
+        ${rotiseriasHome.length === 0 ? `<div class="vacio cliente-vacio">Todavía no hay rotiserías disponibles.</div>` : `
+          <section class="rotiserias-seccion">
+            <div class="fila-rotiserias-wrap">
+              <div class="fila-rotiserias" id="fila-rotiserias">
+                ${rotiseriasHome.map(r => {
+                  const estado = estadoNegocioAhora(r);
+                  return `<button class="rotiseria-avatar ${!estado.abierto ? "rotiseria-cerrada" : ""}" onclick="abrirRotiseria('${r.id}')">
+                    ${r.logo ? `<img src="${r.logo}">` : `<div class="sin-logo">${esc(inicialesNombre(r.nombreNegocio))}</div>`}
+                    <span>${esc(r.nombreNegocio || "Rotisería")}</span>
+                    ${!estado.abierto ? `<span class="etiqueta-cerrada">Cerrado</span>` : ""}
+                  </button>`;
+                }).join("")}
+              </div>
             </div>
-          `).join("")}
-        </div>
-      ` : ""}
+          </section>
+        `}
+
+        ${promoBoard.length > 0 ? `
+          <section class="ofertas-seccion">
+            <div class="banda-ofertas cliente-ofertas-title"><h2>🔥 <span>OFERTAS</span> DEL DÍA</h2></div>
+            <div class="grilla-promos cliente-promos">
+              ${promoBoard.map((p,idx) => `
+                <article class="tarjeta-promo" onclick="abrirRotiseria('${p.rotiseriaId}')">
+                  ${p.imagen ? `<img class="promo-foto" src="${p.imagen}" alt="${esc(p.nombre)}">` : `<div class="promo-foto"></div>`}
+                  <div class="promo-nombre">${esc(p.nombre)}</div>
+                  <span class="precio">${money(p.precio)}</span>
+                </article>`).join("")}
+            </div>
+          </section>
+        ` : ""}
       `}
-    </div>
-  `;
+    </div>`;
 }
 
 function renderCliente(){
